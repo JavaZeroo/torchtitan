@@ -21,6 +21,8 @@ from torchtitan.models.llama3.config_registry import (
 )
 from torchtitan.trainer import Trainer
 
+from torchtitan_recipes.tests import _set_spmd_typechecking
+
 
 def llama3_debugmodel_tp2_asynctp_compile() -> Trainer.Config:
     config = llama3_debugmodel(seq_len=2048)
@@ -90,4 +92,19 @@ def qwen3_moe_deepep_fsdp4_ep4() -> Trainer.Config:
     config = qwen3_moe_deepep(seq_len=512)
     config.parallelism.data_parallel_shard_degree = 4
     config.parallelism.expert_parallel_degree = 4
+    return config
+
+
+def kimi_k3_debugmodel_mm_muon_fsdp2_ep2() -> Trainer.Config:
+    """Kimi K3 per-head DistMuon with FSDP and EP on the Triton KDA kernels.
+
+    Mirrors the B200 ``kimi_k3_mm_muon`` case: off SM100/SM103, Attention Gym
+    routes KDA to its Triton kernels instead of the CuTe ones.
+    """
+    from torchtitan.models.kimi_k3.config_registry import kimi_k3_debugmodel
+
+    config = kimi_k3_debugmodel()
+    _set_spmd_typechecking(config, typechecking=True)
+    config.parallelism.data_parallel_shard_degree = 2
+    config.parallelism.expert_parallel_degree = 2
     return config

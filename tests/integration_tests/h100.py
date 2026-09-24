@@ -76,4 +76,13 @@ def build_h100_tests_list() -> list[OverrideDefinitions]:
             ngpu=4,
             skip_rocm_test=True,
         ),
+        OverrideDefinitions(
+            configs=[recipes.kimi_k3_debugmodel_mm_muon_fsdp2_ep2],
+            test_descr="Kimi K3 multimodal per-head DistMuon FSDP and EP "
+            "on the Triton KDA kernels",
+            test_name="kimi_k3_mm_muon_triton_kda",
+            ngpu=2,
+            # Attention Gym KDA kernels are CUDA-only.
+            skip_rocm_test=True,
+        ),
     ]

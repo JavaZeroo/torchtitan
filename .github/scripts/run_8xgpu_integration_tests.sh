@@ -46,9 +46,11 @@ python -m pip install filelock typing-extensions "setuptools<82" sympy networkx 
 # Uninstall any pre-existing torch so the nightly below installs cleanly
 # without --force-reinstall (which would re-download torch's deps from
 # the public PyPI CDN instead of the in-cluster cache).
-python -m pip uninstall -y torch
+python -m pip uninstall -y torch torchvision
 # Clear PIP_EXTRA_INDEX_URL so the default cpu index can't supply a +cpu torch.
-PIP_EXTRA_INDEX_URL= python -m pip install --pre "${TORCH_SPEC}" --index-url "${INDEX_URL}"
+# torchvision comes from the same nightly channel so its C++ extensions match
+# the torch ABI; the multimodal Kimi K3 case decodes images with it.
+PIP_EXTRA_INDEX_URL= python -m pip install --pre "${TORCH_SPEC}" torchvision --index-url "${INDEX_URL}"
 
 if [[ "${GPU_ARCH_TYPE}" == "rocm" ]]; then
   export HIPBLASLT_TENSILE_LIBPATH="$(python -c 'import os, torch; print(os.path.join(os.path.dirname(torch.__file__), "lib", "hipblaslt", "library"))')"

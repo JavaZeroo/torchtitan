@@ -121,6 +121,7 @@ def test_h100_tests_are_registered_in_separate_suite() -> None:
         "fsdp+tp+pp+compile+float8",
         "fsdp_symm_mem",
         "hsdp+cp+compile+float8",
+        "kimi_k3_mm_muon_triton_kda",
         "qwen3_fsdp+deepep",
     }
     assert all(not hasattr(test, "use_h100") for test in build_features_test_list())
