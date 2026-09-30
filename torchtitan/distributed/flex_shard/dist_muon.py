@@ -60,6 +60,13 @@ __all__ = [
 # are exact in BF16 and redistribution packs them in this wire dtype.
 _NEWTON_SCHULZ_DTYPE = torch.bfloat16
 
+# A contiguous matrix batch larger than this is orthogonalized in pieces of at
+# least two matrices, which bounds the Newton-Schulz temporaries of one call.
+# Batched GEMMs give the same bits for any batch of two or more matrices, so
+# the pieces reproduce the whole-batch result exactly; a batch of one takes a
+# different kernel path and is never split off.
+_NEWTON_SCHULZ_PIECE_NUMEL = 2**24
+
 # Inputs up to this many elements replay a captured kernel sequence; above it
 # the GEMMs run long enough that launch cost is noise, and keeping their
 # temporaries in a graph pool would pin the largest transient of the step.
@@ -1151,7 +1158,9 @@ def _assign_balanced_compute_placements(
     ]
     heapq.heapify(heap)
     unit_owners: dict[int, dict[int, int]] = {}
-    for job in sorted(jobs, key=lambda job: (-job.cost, -job.num_bytes, job.stable_key)):
+    for job in sorted(
+        jobs, key=lambda job: (-job.cost, -job.num_bytes, job.stable_key)
+    ):
         taken = set(unit_owners.get(job.item_index, {}).values())
         skipped = []
         while True:
@@ -1163,7 +1172,12 @@ def _assign_balanced_compute_placements(
             heapq.heappush(heap, entry)
         heapq.heappush(
             heap,
-            (load + job.cost, num_bytes + job.num_bytes, cumulative + job.cost, position),
+            (
+                load + job.cost,
+                num_bytes + job.num_bytes,
+                cumulative + job.cost,
+                position,
+            ),
         )
         if job.unit_index is None:
             placements[job.item_index] = _ComputePlacement(participants[position], None)
@@ -1172,7 +1186,8 @@ def _assign_balanced_compute_placements(
 
     for item_index, owners in unit_owners.items():
         leading = tuple(
-            participants[owners[unit]] for unit in range(len(unit_shapes_by_item[item_index]))
+            participants[owners[unit]]
+            for unit in range(len(unit_shapes_by_item[item_index]))
         )
         trailing = tuple(
             participant
@@ -1994,22 +2009,44 @@ def _compute_muon_direction(
     applies their relative learning-rate ratio in the storage dtype.
     """
     for view in matrix_views:
-        matrices = view.view_as_matrix_batch(prepared)
-        if graphs is None or matrices.numel() > _NEWTON_SCHULZ_GRAPH_MAX_NUMEL:
-            _orthogonalize_in_place(
-                matrices,
-                ns_coefficients=ns_coefficients,
-                ns_steps=ns_steps,
-                eps=eps,
-            )
-        else:
-            graphs.run(
-                matrices,
-                ns_coefficients=ns_coefficients,
-                ns_steps=ns_steps,
-                eps=eps,
-            )
+        for piece in _newton_schulz_pieces(view.view_as_matrix_batch(prepared)):
+            if graphs is None or piece.numel() > _NEWTON_SCHULZ_GRAPH_MAX_NUMEL:
+                _orthogonalize_in_place(
+                    piece,
+                    ns_coefficients=ns_coefficients,
+                    ns_steps=ns_steps,
+                    eps=eps,
+                )
+            else:
+                graphs.run(
+                    piece,
+                    ns_coefficients=ns_coefficients,
+                    ns_steps=ns_steps,
+                    eps=eps,
+                )
     return prepared
+
+
+def _newton_schulz_pieces(matrices: Tensor) -> Iterable[Tensor]:
+    """Split a large contiguous matrix batch into pieces of two or more matrices."""
+    rows, columns = matrices.shape[-2:]
+    if (
+        matrices.ndim < 3
+        or not matrices.is_contiguous()
+        or matrices.numel() <= _NEWTON_SCHULZ_PIECE_NUMEL
+    ):
+        return (matrices,)
+    flat = matrices.view(-1, rows, columns)
+    num_matrices = flat.shape[0]
+    piece_size = max(2, _NEWTON_SCHULZ_PIECE_NUMEL // (rows * columns))
+    if num_matrices < 2 * piece_size:
+        return (matrices,)
+    starts = list(range(0, num_matrices, piece_size))
+    if num_matrices - starts[-1] < 2:
+        # Fold a trailing single matrix into the previous piece.
+        starts.pop()
+    ends = starts[1:] + [num_matrices]
+    return tuple(flat[start:end] for start, end in zip(starts, ends, strict=True))
 
 
 def _orthogonalize_in_place(
