@@ -16,6 +16,8 @@ Environment knobs (read when the config function runs):
   MB_EXPERTS      routed experts per MoE layer (default per flavor)
   MB_VOCAB        vocabulary size (default 4096)
   MB_SEQ_LEN      context length (default 512)
+  MB_BUCKET_LAYERS  MoE layers per DistMuon bucket (default: the recipe's 2)
+  MB_TOKENS_PER_MB  tokens per microbatch per dp rank for train mode (default: seq_len)
 """
 
 from __future__ import annotations
@@ -105,8 +107,67 @@ def _model(
     )
 
 
+def _regroup_buckets(optimizer_config, layers_per_bucket: int):
+    """Rebuild the recipe's per-layer buckets with a different layer grouping.
+
+    The recipe keeps the dense layer 0 alone and pairs the MoE layers; each
+    pair also gets a routed-experts bucket. The FQN patterns carry the layer
+    index, so they can be regrouped without touching the compute layouts.
+    """
+    import re
+    from dataclasses import replace
+
+    muon = next(
+        optimizer
+        for optimizer in optimizer_config.optimizers
+        if isinstance(optimizer, kimi.DistMuon.Config)
+    )
+    by_layer: dict[tuple[int, bool], list[str]] = {}
+    for bucket in muon.bucket_configs:
+        for fqn in bucket.patterns:
+            match = re.match(r"layers\.(\d+)\.", fqn)
+            assert match is not None, fqn
+            layer = int(match.group(1))
+            routed = ".routed_experts." in fqn
+            by_layer.setdefault((layer, routed), []).append(fqn)
+    num_layers = max(layer for layer, _ in by_layer) + 1
+    groups = [(0,)] + [
+        tuple(range(first, min(first + layers_per_bucket, num_layers)))
+        for first in range(1, num_layers, layers_per_bucket)
+    ]
+    buckets = []
+    for layer_ids in groups:
+        name = "layers." + "-".join(map(str, layer_ids))
+        non_routed = [
+            f for layer in layer_ids for f in by_layer.get((layer, False), [])
+        ]
+        routed = [f for layer in layer_ids for f in by_layer.get((layer, True), [])]
+        if non_routed:
+            buckets.append(kimi.BucketConfig(name=name, patterns=tuple(non_routed)))
+        if routed:
+            buckets.append(
+                kimi.BucketConfig(name=f"{name}.routed-experts", patterns=tuple(routed))
+            )
+    optimizers = [
+        replace(o, bucket_configs=tuple(buckets)) if o is muon else o
+        for o in optimizer_config.optimizers
+    ]
+    return replace(optimizer_config, optimizers=optimizers)
+
+
 def _trainer_config(model_config: KimiK25Model.Config, *, ep: int) -> Trainer.Config:
     parallelism = ParallelismConfig(expert_parallel_degree=ep)
+    optimizer = kimi._dist_muon_optimizer(
+        model_config,
+        muon_lr=3e-4,
+        adamw_lr=3e-4,
+        parallelism=parallelism,
+    )
+    if os.environ.get("MB_BUCKET_LAYERS"):
+        optimizer = _regroup_buckets(optimizer, int(os.environ["MB_BUCKET_LAYERS"]))
+    tokens_per_microbatch = _env_int(
+        "MB_TOKENS_PER_MB", model_config.max_context_length
+    )
     return kimi._KimiTrainerConfig(
         loss=ChunkedLossWrapper.Config(
             loss_fn=CrossEntropyLoss.Config(
@@ -119,12 +180,7 @@ def _trainer_config(model_config: KimiK25Model.Config, *, ep: int) -> Trainer.Co
         dataloader=GrainDataLoader.Config(
             dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
         ),
-        optimizer=kimi._dist_muon_optimizer(
-            model_config,
-            muon_lr=3e-4,
-            adamw_lr=3e-4,
-            parallelism=parallelism,
-        ),
+        optimizer=optimizer,
         lr_scheduler=LRSchedulersContainer.Config(
             warmup_steps=2,
             decay_ratio=0.8,
@@ -132,7 +188,7 @@ def _trainer_config(model_config: KimiK25Model.Config, *, ep: int) -> Trainer.Co
             min_lr_factor=0.0,
         ),
         training=TrainingConfig(
-            num_tokens_per_microbatch_per_dp_rank=model_config.max_context_length,
+            num_tokens_per_microbatch_per_dp_rank=tokens_per_microbatch,
             max_context_length=model_config.max_context_length,
             steps=10,
             disable_cuda_graphs=True,

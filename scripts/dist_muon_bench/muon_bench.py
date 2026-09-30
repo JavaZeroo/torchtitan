@@ -118,6 +118,7 @@ class _StepRecorder:
         self.records: list[dict] = []
 
     def run(self, step: int, fn) -> None:
+        arrival = time.perf_counter()
         torch.cuda.synchronize(self._device)
         if dist.is_initialized():
             dist.barrier()
@@ -129,11 +130,18 @@ class _StepRecorder:
         host = time.perf_counter() - start
         torch.cuda.synchronize(self._device)
         total = time.perf_counter() - start
+        previous_end = self.records[-1]["end_time"] if self.records else None
         self.records.append(
             {
                 "step": step,
                 "host_ms": host * 1e3,
                 "total_ms": total * 1e3,
+                # Wall time since the previous optimizer step ended: in train
+                # mode this is the forward/backward (plus data) of one step.
+                "since_previous_ms": (
+                    None if previous_end is None else (arrival - previous_end) * 1e3
+                ),
+                "end_time": time.perf_counter(),
                 "resident_bytes": resident,
                 "peak_bytes": torch.cuda.max_memory_allocated(self._device),
                 "reserved_bytes": torch.cuda.memory_reserved(self._device),
@@ -241,7 +249,23 @@ def _write(out_dir, rank, mode, muons, recorder, warmup, extra=None) -> None:
         )
 
 
+def _apply_runtime_overrides() -> None:
+    """Experiment knobs that patch module constants before the plan is built."""
+    slots = os.environ.get("MB_SLOTS")
+    if slots:
+        from torchtitan.distributed.flex_shard import _optimizer_reshard_runtime
+
+        # pyrefly: ignore [bad-assignment]
+        _optimizer_reshard_runtime._NUM_PIPELINE_SLOTS = int(slots)
+    if os.environ.get("MB_NO_NS_GRAPHS"):
+        from torchtitan.distributed.flex_shard import dist_muon
+
+        if hasattr(dist_muon, "_NEWTON_SCHULZ_GRAPH_MAX_NUMEL"):
+            dist_muon._NEWTON_SCHULZ_GRAPH_MAX_NUMEL = -1
+
+
 def run_optim(options, argv) -> None:
+    _apply_runtime_overrides()
     out_dir = options["out"]
     steps = int(options.get("steps", 12))
     warmup = int(options.get("warmup", 3))
@@ -295,6 +319,7 @@ def run_train(options, argv) -> None:
     from torchtitan.config import ConfigManager
     from torchtitan.trainer import Trainer
 
+    _apply_runtime_overrides()
     out_dir = options["out"]
     warmup = int(options.get("warmup", 3))
     config = cast(Trainer.Config, ConfigManager().parse_args(argv))
