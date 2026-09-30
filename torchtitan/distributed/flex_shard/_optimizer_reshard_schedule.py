@@ -765,7 +765,13 @@ class _RedistributionBucketPlan(Generic[_ItemT]):
     group: _RedistributionGroup
     storage_to_compute_schedule: _PackedAllToAllSchedule
     compute_to_storage_schedule: _PackedAllToAllSchedule
+    # Storage dtype: prepared inputs and finalized results are exchanged with
+    # the optimizer in this dtype.
     dtype: torch.dtype
+    # Wire dtype: packed exchange buffers and the redistributed compute tensors.
+    # The optimizer declares it when its compute input and result are exactly
+    # representable there, so the cast happens once while packing.
+    transport_dtype: torch.dtype
     device: torch.device
 
 
@@ -1069,6 +1075,7 @@ def _build_bucket_plans(
         [tuple[_BucketPlanningContext[_ItemT], ...]],
         Sequence[Sequence[_RedistributionPlan | None]],
     ],
+    transport_dtype: torch.dtype | None = None,
 ) -> _BucketPlanningResult[_ItemT]:
     """Build ordered optimizer bucket plans with and without redistribution.
 
@@ -1078,7 +1085,8 @@ def _build_bucket_plans(
     placement and returns ``None`` for compute-ready items or a
     transport-neutral plan for items requiring redistribution. Bucket
     membership and redistribution requirements must be rank-stable within
-    every potential communication group.
+    every potential communication group. ``transport_dtype`` selects the wire
+    dtype of every redistribution bucket; ``None`` keeps the storage dtype.
     """
     resolved = _resolve_buckets(items, specs, get_fqn=get_fqn)
     buckets = []
@@ -1204,6 +1212,7 @@ def _build_bucket_plans(
                     local_participant=group.local_participant,
                 ),
                 dtype=dtype,
+                transport_dtype=dtype if transport_dtype is None else transport_dtype,
                 device=device,
             )
         )
@@ -1231,6 +1240,7 @@ def _validate_bucket_plans_across_ranks(
             continue
         description = (
             str(plan.dtype),
+            str(plan.transport_dtype),
             plan.device.type,
             tuple(
                 _redistribution_plan_key(redistribution_plan)
