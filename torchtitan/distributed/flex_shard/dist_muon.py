@@ -1158,9 +1158,10 @@ def _assign_balanced_compute_placements(
     ]
     heapq.heapify(heap)
     unit_owners: dict[int, dict[int, int]] = {}
-    for job in sorted(
-        jobs, key=lambda job: (-job.cost, -job.num_bytes, job.stable_key)
-    ):
+    ordered_jobs = sorted(
+        jobs, key=lambda item: (-item.cost, -item.num_bytes, item.stable_key)
+    )
+    for job in ordered_jobs:
         taken = set(unit_owners.get(job.item_index, {}).values())
         skipped = []
         while True:
