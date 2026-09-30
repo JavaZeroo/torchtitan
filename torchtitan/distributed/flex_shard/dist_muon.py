@@ -61,11 +61,11 @@ __all__ = [
 _NEWTON_SCHULZ_DTYPE = torch.bfloat16
 
 # A contiguous matrix batch larger than this is orthogonalized in pieces of at
-# least two matrices, which bounds the Newton-Schulz temporaries of one call.
-# Batched GEMMs give the same bits for any batch of two or more matrices, so
-# the pieces reproduce the whole-batch result exactly; a batch of one takes a
-# different kernel path and is never split off.
-_NEWTON_SCHULZ_PIECE_NUMEL = 2**24
+# least two matrices, which bounds the Newton-Schulz temporaries of one call
+# to a few hundred MiB. Batched GEMMs give the same bits for any batch of two
+# or more matrices, so the pieces reproduce the whole-batch result exactly; a
+# batch of one takes a different kernel path and is never split off.
+_NEWTON_SCHULZ_PIECE_NUMEL = 2**26
 
 # Inputs up to this many elements replay a captured kernel sequence; above it
 # the GEMMs run long enough that launch cost is noise, and keeping their
