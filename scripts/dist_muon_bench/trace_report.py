@@ -25,7 +25,7 @@ def load(path):
 
 
 FAMILIES = (
-    ("gemm", re.compile(r"gemm|cutlass|xmma|matmul|sgemm|bgemm", re.I)),
+    ("gemm", re.compile(r"gemm|cutlass|xmma|matmul|sgemm|bgemm|nvjet", re.I)),
     ("nccl", re.compile(r"ncclDevKernel|nccl", re.I)),
     ("copy/cast", re.compile(r"copy|Copy|memcpy|cast", re.I)),
     ("reduce/norm", re.compile(r"reduce|norm|Reduce", re.I)),

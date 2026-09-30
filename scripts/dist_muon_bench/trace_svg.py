@@ -19,7 +19,7 @@ import sys
 from collections import defaultdict
 
 FAMILIES = (
-    ("gemm", re.compile(r"gemm|cutlass|xmma|matmul", re.I)),
+    ("gemm", re.compile(r"gemm|cutlass|xmma|matmul|nvjet", re.I)),
     ("nccl", re.compile(r"nccl", re.I)),
     ("copy", re.compile(r"copy|Copy|memcpy|cast|foreach|multi_tensor", re.I)),
     (
