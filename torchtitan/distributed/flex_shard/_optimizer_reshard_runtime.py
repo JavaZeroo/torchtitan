@@ -308,10 +308,10 @@ class _BucketedRedistributionRuntime(Generic[_ItemT]):
     ``Tensor.record_stream()``. Local-only buckets are prefetch barriers, so
     no later redistributed ``prepare`` runs before an intervening local bucket.
 
-    Redistributed work is packed in the bucket's wire dtype: the storage-dtype
-    input from ``prepare`` is cast while it is packed, ``compute`` receives a
-    wire-dtype tensor, and the result is cast back while it is unpacked for
-    ``finalize``. Local work stays in the storage dtype.
+    Every runtime-owned tensor a redistribution bucket hands to a callback is
+    in the bucket's wire dtype: ``prepare`` writes it, the packed all-to-all
+    moves it, ``compute`` updates it, and ``finalize`` reads it back. Local
+    work uses the dtype ``local_tensor_spec`` reports.
 
     Any exception is fatal: parameters or optimizer state may already be
     updated and communication may be in flight, so callers must not reuse this
@@ -370,16 +370,13 @@ class _BucketedRedistributionRuntime(Generic[_ItemT]):
             redistributed_index += 1
             to_compute = plan.storage_to_compute_schedule
             to_storage = plan.compute_to_storage_schedule
-            # Exchange buffers and redistributed compute tensors live in the
-            # wire dtype; storage scratch holds the storage-dtype input and
-            # result that the optimizer callbacks see.
-            wire_requirements = requirements.setdefault(
+            # Exchange buffers, storage scratch and compute scratch all live
+            # in the wire dtype: the optimizer writes its input and reads its
+            # result in that dtype.
+            plan_requirements = requirements.setdefault(
                 (plan.device, plan.transport_dtype), _BufferRequirements()
             )
-            storage_requirements = requirements.setdefault(
-                (plan.device, plan.dtype), _BufferRequirements()
-            )
-            wire_requirements.include_communication(
+            plan_requirements.include_communication(
                 storage_exchange_numel=max(
                     to_compute.input_buffer_numel,
                     to_storage.output_buffer_numel,
@@ -392,12 +389,12 @@ class _BucketedRedistributionRuntime(Generic[_ItemT]):
             participant = plan.group.local_participant
             for redistribution_plan in plan.redistribution_plans:
                 storage_partition = redistribution_plan.storage_partition(participant)
-                storage_requirements.include_storage_scratch(
+                plan_requirements.include_storage_scratch(
                     math.prod(storage_partition.tensor_shape)
                 )
                 compute_partition = redistribution_plan.compute_partition(participant)
                 if compute_numel := math.prod(compute_partition.tensor_shape):
-                    wire_requirements.include_compute_scratch(compute_numel)
+                    plan_requirements.include_compute_scratch(compute_numel)
             for item in plan.unredistributed_items:
                 _include_compute_scratch_requirement(
                     requirements,
@@ -691,7 +688,7 @@ def _prepare_redistributed(
         partition = redistribution_plan.storage_partition(participant)
         prepared = slot.storage_partition_buffer(
             partition.tensor_shape,
-            dtype=plan.dtype,
+            dtype=plan.transport_dtype,
             device=plan.device,
         )
         prepare(item, prepared)
@@ -778,7 +775,7 @@ def _finalize_redistributed(
         partition = redistribution_plan.storage_partition(participant)
         update = slot.storage_partition_buffer(
             partition.tensor_shape,
-            dtype=plan.dtype,
+            dtype=plan.transport_dtype,
             device=plan.device,
         )
         spans = schedule.output_spans_by_parameter[index]

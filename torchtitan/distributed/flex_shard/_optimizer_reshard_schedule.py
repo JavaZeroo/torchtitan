@@ -765,12 +765,11 @@ class _RedistributionBucketPlan(Generic[_ItemT]):
     group: _RedistributionGroup
     storage_to_compute_schedule: _PackedAllToAllSchedule
     compute_to_storage_schedule: _PackedAllToAllSchedule
-    # Storage dtype: prepared inputs and finalized results are exchanged with
-    # the optimizer in this dtype.
+    # Storage dtype of the bucket's parameters.
     dtype: torch.dtype
-    # Wire dtype: packed exchange buffers and the redistributed compute tensors.
-    # The optimizer declares it when its compute input and result are exactly
-    # representable there, so the cast happens once while packing.
+    # Wire dtype of every runtime-owned tensor: exchange buffers, storage
+    # scratch and compute scratch. The optimizer declares it when its prepared
+    # input and its result are exactly representable there.
     transport_dtype: torch.dtype
     device: torch.device
 
