@@ -66,6 +66,17 @@ Compute sharding is construction-time configuration. It is validated and
 frozen when the optimizer is built, but is not stored in its state dict;
 checkpoint restore must rebuild the optimizer with matching values.
 
+Where a redistributed parameter computes is planned per bucket. `Owned`
+tensors and the dim-0 chunks of `Shard` / `BlockShard` parameters with fewer
+chunks than participants are jobs; compute-ready parameters and fully
+populated shardings seed each participant's load, and one LPT pass places
+the jobs so that no rank collects the leading mesh coordinates' work by
+default. Newton-Schulz runs in BF16, so DistMuon declares BF16 as the wire
+dtype: the momentum-mixed input is rounded once while it is packed, the
+exchange buffers and every runtime scratch tensor are BF16, and the update
+reads the BF16 direction directly. Per-block learning-rate ratios of a
+`BlockShard` parameter are applied by the update in the storage dtype.
+
 ## TorchTitan Kimi integration
 
 The [Kimi test recipes](../../../torchtitan_recipes/tests/models/kimi_k2_7.py)
