@@ -469,12 +469,14 @@ class TestDistMuonInitialExpertStorageContract(DTensorTestBase):
             edp_shard_coordinate,
         )
         compute_offset = ep_offset + edp_shard_offset
-        expected_compute = grad.narrow(
-            0,
-            compute_offset,
-            edp_shard_num_experts,
-        ).contiguous()
-        expected_direction = grad.clone().mul_(0.5).add_(0.25)
+        # The runtime hands compute its input in the Newton-Schulz dtype and
+        # reads the direction back in it.
+        expected_compute = (
+            grad.narrow(0, compute_offset, edp_shard_num_experts)
+            .contiguous()
+            .to(torch.bfloat16)
+        )
+        expected_direction = grad.to(torch.bfloat16).mul_(0.5).add_(0.25).float()
         expected_parameter = value.clone().mul_(1 - lr * weight_decay)
         expected_parameter.add_(
             expected_direction,
