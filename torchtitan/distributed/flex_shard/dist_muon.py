@@ -2088,8 +2088,9 @@ class _NewtonSchulzGraphCache:
         self._stream: torch.cuda.Stream | None = None
 
     def _capture_stream(self, device: torch.device) -> torch.cuda.Stream:
-        if self._stream is None:
+        if self._pool is None:
             self._pool = torch.cuda.graph_pool_handle()
+        if self._stream is None:
             self._stream = torch.cuda.Stream(device=device)
             # Create the cuBLAS workspace of the capture stream outside any
             # capture.
@@ -2100,7 +2101,10 @@ class _NewtonSchulzGraphCache:
         return self._stream
 
     def clear(self) -> None:
+        # Releasing the last graph of a pool retires the pool; the next
+        # capture must start a new one.
         self._graphs.clear()
+        self._pool = None
 
     def run(
         self,
