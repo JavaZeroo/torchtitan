@@ -109,7 +109,8 @@ def main():
     left = 120
     lane_h = 18
     group_gap = 26
-    traces = [(p, load(p)) for p in paths]
+    # Arguments are paths, or ``label=path`` to name a group.
+    traces = [(p.split("=", 1)[0], load(p.split("=", 1)[-1])) for p in paths]
     span = max(
         max(e for lane in lanes.values() for _, e, _ in lane)
         - min(s for lane in lanes.values() for s, _, _ in lane)
@@ -120,9 +121,9 @@ def main():
     out = []
     for path, lanes in traces:
         t0 = min(s for lane in lanes.values() for s, _, _ in lane)
-        label = path.split("/")[-3:]
+        label = path if "/" not in path else "/".join(path.split("/")[-3:])
         out.append(
-            f'<text x="{left}" y="{y}" font-size="12" font-weight="600" fill="currentColor">{"/".join(label)}</text>'
+            f'<text x="{left}" y="{y}" font-size="12" font-weight="600" fill="currentColor">{label}</text>'
         )
         y += 8
         ordered = sorted(lanes, key=lambda st: -sum(e - s for s, e, _ in lanes[st]))
