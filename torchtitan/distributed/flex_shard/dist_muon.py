@@ -604,9 +604,10 @@ class DistMuon(Optimizer):
         row_scale = self._direction_row_scale_by_fqn.get(compute_layout.fqn)
         if row_scale is not None:
             # The direction is exact in the Newton-Schulz dtype; the per-block
-            # ratio is applied in the storage dtype, as the whole-matrix path
-            # does implicitly through the learning rate.
-            direction = direction * row_scale
+            # ratio is applied and rounded in the storage dtype, which is what
+            # scaling the matrix batch in a storage-dtype scratch did before.
+            # FP32 storage keeps the exact product; BF16 storage rounds once.
+            direction = (direction * row_scale).to(local_param.dtype)
         _apply_muon_update(
             local_param,
             direction,
