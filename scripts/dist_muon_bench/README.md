@@ -15,6 +15,7 @@ scripts run against any checkout (set `REPO=`).
 | `h20_digest.sh` | text-only digest of a session (summary, optimizer share, loss tables, trace reports) for hosts that cannot export files |
 | `summarize_session.py` | tables over a results tree `results/<variant>/<experiment>/rank*.json` |
 | `run_bench.sh` | torchrun launcher; `SHARED_GPU=1` lets several NCCL ranks share one GPU for local numerics checks (`NCCL_MULTI_RANK_GPU_ENABLE=1`) |
+| `ns_shape_bench.py` | times Newton-Schulz per matrix-view shape of a plan (as issued vs one merged batch per shape class), from a `plan_dump.py` JSON with `view_shapes_by_rank` |
 | `bmm_invariance_probe.py` | is batched Newton-Schulz bitwise invariant to how the batch is chunked on this GPU (decides whether piecewise orthogonalization is exact) |
 | `setup_h20.sh`, `run_h20.sh`, `run_h20_r2.sh`, `h20_lib.sh` | one-shot sessions on an 8-GPU host: environment, variant worktrees from the branch history, every experiment base vs variants, tests, probe, summary and a results tarball; round 2 adds HSDP duplication, threshold sweeps at scale, production-like training and the Moonlight 16B recipe |
 
@@ -25,7 +26,7 @@ takes `--module`, `--config`, `--comm-backend`):
 | variable | effect |
 |---|---|
 | `MB_SEED` (default 42), `MB_DETERMINISTIC` (default 1) | `debug.seed`, `debug.deterministic`; required for stable digests |
-| `MB_STEPS` | `training.steps` in train mode |
+| `MB_STEPS`, `MB_TIMEOUT` | `training.steps` in train mode; collective timeout in seconds |
 | `MB_TB=1` | TensorBoard every step under `<out>/dump/tb` |
 | `MB_DP_SHARD`, `MB_DP_REPLICATE`, `MB_EP` | parallelism degrees, rebuilt through the recipe so expert layouts realign |
 | `MB_SLOTS`, `MB_NO_NS_GRAPHS`, `MB_NS_GRAPH_MAX_NUMEL`, `MB_NS_PIECE_NUMEL` | runtime knobs: pipeline slots, disable Newton-Schulz graph replay, graph-replay input threshold, piecewise orthogonalization batch threshold (the last three only act on the optimized branch) |

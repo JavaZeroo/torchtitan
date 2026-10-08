@@ -31,6 +31,7 @@ def apply_harness_env(config):
       MB_SEED           debug seed (default 42; empty disables)
       MB_DETERMINISTIC  1 enables deterministic kernels (default 1)
       MB_STEPS          training steps for train mode
+      MB_TIMEOUT        collective timeout in seconds (init and train)
       MB_TB             1 enables TensorBoard metrics every step under dump/tb
       MB_DP_SHARD, MB_DP_REPLICATE, MB_EP  parallelism degrees (rebuilt through
                         the recipe's __post_init__ so expert layouts realign)

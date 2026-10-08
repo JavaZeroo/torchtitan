@@ -65,9 +65,22 @@ for v in base full; do
     bash "$H/run_bench.sh" --mb.mode=train --mb.warmup=3
 done
 
-echo "##### F. Kimi K3 debug optimizer trace (per-head KDA/MLA layouts)"
+echo "##### F. Kimi K3 debug: optimizer trace, and run-to-run determinism of the training itself"
 for v in base full; do
   optim $v k3_debug_optim kimi_k3_debug
+  # Round 1 found K3 (BF16 parameters) not bitwise: the per-block ratio was
+  # applied in FP32 instead of the storage dtype. v2 runs the fixed branch;
+  # base/train_k3_debug_v2 against base/train_k3_debug is the determinism check.
+  train $v train_k3_debug_v2 kimi_k3_debug 40
+done
+
+echo "##### G. Newton-Schulz time per matrix shape (static plan of rank 0, fake backend)"
+for cfg in "moonlight_slice MB_LAYERS=27" "kimi_k2_5_slice MB_LAYERS=3 MB_EXPERTS=384" "kimi_k3_debug"; do
+  set -- $cfg; name=$1; shift
+  ( cd "$CODE/full" && env "$@" PYTHONPATH="$CODE/full:$H" NGPU=8 LOCAL_RANK=0 RANK=0 WORLD_SIZE=8 MASTER_ADDR=127.0.0.1 MASTER_PORT=29777 \
+      "$VENV/bin/python" "$H/plan_dump.py" --module bench_configs --config $name --comm-backend fake --mb.out="$RES/plan_$name.json" > "$RES/plan_$name.log" 2>&1 \
+    && PYTHONPATH="$CODE/full:$H" "$VENV/bin/python" "$H/ns_shape_bench.py" "$RES/plan_$name.json" > "$RES/ns_shapes_$name.txt" 2>&1 \
+    && tail -14 "$RES/ns_shapes_$name.txt" ) || echo "    ns shape bench failed for $name"
 done
 
 "$VENV/bin/python" "$H/summarize_session.py" "$RES" > "$RES/summary.txt" 2>&1 || true

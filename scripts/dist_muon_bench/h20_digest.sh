@@ -38,6 +38,10 @@ for exp in $(ls "$RES/base" | grep '^train' | grep -v '\.log$'); do
   b=$RES/base/$exp/dump/tb; f=$RES/full/$exp/dump/tb
   if [ -d "$b" ] && [ -d "$f" ]; then echo "--- $exp"; "$PY" "$H/tb_metrics.py" "$b" "$f" 2>&1 | tail -45; fi
 done
+echo; echo "##### K3 determinism: base round 1 vs base round 2 (same tree)"
+if [ -d "$RES/base/train_k3_debug_v2" ]; then "$PY" "$H/compare_runs.py" "$RES/base/train_k3_debug" "$RES/base/train_k3_debug_v2" 2>&1 | grep digests; "$PY" "$H/tb_metrics.py" "$RES/base/train_k3_debug/dump/tb" "$RES/base/train_k3_debug_v2/dump/tb" 2>&1 | tail -1; fi
+echo; echo "##### Newton-Schulz time per shape (round 2)"
+cat "$RES"/ns_shapes_*.txt 2>/dev/null
 echo; echo "##### trace reports"
 report() {  # variant experiment rank
   local t=$RES/$1/$2/trace_rank$3.json.gz

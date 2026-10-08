@@ -107,6 +107,7 @@ def main() -> None:
                 state_bytes += param.to_local().numel() * element_size
                 entry = _item_entry(item, redistributed=False)
                 loads = {}
+                view_shapes = {}
                 for rank in _device_mesh_ranks(param.device_mesh):
                     try:
                         region = _dtensor_storage_region_for_participant(param, rank)
@@ -119,6 +120,7 @@ def main() -> None:
                             tuple(local.shape), item.compute_sharding, 0, ns_steps
                         )
                         loads[rank] = flops
+                        view_shapes[rank] = shapes
                         continue
                     flops, shapes = _views_flops(
                         region.shape,
@@ -127,7 +129,9 @@ def main() -> None:
                         ns_steps,
                     )
                     loads[rank] = flops
+                    view_shapes[rank] = shapes
                 entry["ns_flops_by_rank"] = loads
+                entry["view_shapes_by_rank"] = view_shapes
                 for rank, flops in loads.items():
                     bucket["load_by_rank"][rank] += flops
                 bucket["items"].append(entry)
@@ -141,6 +145,7 @@ def main() -> None:
                 entry = _item_entry(item, redistributed=True)
                 loads = {}
                 compute_shapes = {}
+                view_shapes = {}
                 for partition in redistribution_plan.compute_partitions:
                     row_start = (
                         partition.logical_regions[0].offsets[0]
@@ -158,8 +163,10 @@ def main() -> None:
                         compute_shapes[partition.participant] = list(
                             partition.tensor_shape
                         )
+                        view_shapes[partition.participant] = shapes
                 entry["ns_flops_by_rank"] = loads
                 entry["compute_shape_by_rank"] = compute_shapes
+                entry["view_shapes_by_rank"] = view_shapes
                 traffic = defaultdict(int)
                 for route in redistribution_plan.storage_to_compute_routes:
                     sources = route.source.participants
