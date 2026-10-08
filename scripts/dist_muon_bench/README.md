@@ -6,7 +6,7 @@ scripts run against any checkout (set `REPO=`).
 
 | script | purpose |
 |---|---|
-| `bench_configs.py` | `moonlight_slice`, `kimi_k2_5_slice` (production shapes cut to `MB_LAYERS` layers, `MB_EXPERTS` experts), `debugmodel` (the Kimi K2.5 CI recipe) and `kimi_k3_debug` (the K3 debugmodel at FSDP 8 x EP 8) |
+| `bench_configs.py` | `moonlight_slice`, `kimi_k2_5_slice` (production shapes cut to `MB_LAYERS` layers, `MB_EXPERTS` experts), `debugmodel` (the Kimi K2.5 CI recipe), `kimi_k3_debug` (the K3 debugmodel at FSDP 8 x EP 8) and `moonlight_16b` (the production recipe on local c4_test data) |
 | `plan_dump.py` | static plan: buckets, layouts, compute placement, per-rank Newton-Schulz FLOPs, traffic and reserved buffers; runs as one logical rank under `--comm-backend fake` |
 | `muon_bench.py` | `--mb.mode=optim`: DistMuon alone with deterministic synthetic gradients; `--mb.mode=train`: the real training loop with the optimizer phase timed. Both write per-rank JSON with timings, allocator bytes and SHA-256 digests of every Muon parameter and momentum shard, plus an optional Kineto trace |
 | `compare_runs.py` | digest equality and timing/memory comparison of two `muon_bench` output directories |

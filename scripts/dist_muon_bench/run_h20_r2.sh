@@ -55,14 +55,16 @@ for v in base full; do
 done
 
 echo "##### E. Moonlight 16B-A3B production recipe (real vocabulary, 27 layers, EP 8)"
+# HF_ENDPOINT=https://hf-mirror.com helps where huggingface.co is unreachable.
 for v in base full; do
-  if [ ! -d "$CODE/$v/assets/hf/Moonlight-16B-A3B" ]; then
+  if [ ! -f "$CODE/$v/assets/hf/Moonlight-16B-A3B/tokenizer.json" ]; then
     (cd "$CODE/$v" && "$VENV/bin/python" scripts/download_hf_assets.py --repo_id moonshotai/Moonlight-16B-A3B --assets tokenizer > "$RES/assets_$v.log" 2>&1) || echo "    asset download failed for $v (see $RES/assets_$v.log)"
   fi
   run $v moonlight16b_optim env MODULE=torchtitan_recipes.tests.models.kimi_k2_7 CONFIG=moonlight_16b_a3b \
     bash "$H/run_bench.sh" --mb.steps=12 --mb.warmup=3 --mb.profile_step=8 --mb.profile_ranks=0,3
-  run $v moonlight16b_train env MODULE=torchtitan_recipes.tests.models.kimi_k2_7 CONFIG=moonlight_16b_a3b MB_STEPS=8 MB_TB=1 \
-    bash "$H/run_bench.sh" --mb.mode=train --mb.warmup=3
+  # The production model on local c4_test data (no HF streaming), 4k context,
+  # 16k tokens per rank per microbatch.
+  train $v moonlight16b_train_16k moonlight_16b 8 MB_SEQ_LEN=4096 MB_TOKENS_PER_MB=16384
 done
 
 echo "##### F. Kimi K3 debug: optimizer trace, and run-to-run determinism of the training itself"

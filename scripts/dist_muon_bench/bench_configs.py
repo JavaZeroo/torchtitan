@@ -262,4 +262,32 @@ def kimi_k3_debug() -> Trainer.Config:
     )
 
 
-__all__ = ["moonlight_slice", "kimi_k2_5_slice", "debugmodel", "kimi_k3_debug"]
+def moonlight_16b() -> Trainer.Config:
+    """The Moonlight 16B-A3B production recipe on the repository's c4_test data.
+
+    Same model, vocabulary and optimizer as the production recipe; only the
+    dataset is local, so training steps need no Hugging Face streaming. The
+    tokenizer still has to be downloaded to ./assets/hf/Moonlight-16B-A3B.
+    """
+    from dataclasses import replace
+
+    from torchtitan_recipes.tests.models.kimi_k2_7 import moonlight_16b_a3b
+
+    config = moonlight_16b_a3b(seq_len=_env_int("MB_SEQ_LEN", 4096))
+    config.dataloader = GrainDataLoader.Config(
+        dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
+    )
+    config.training.num_tokens_per_microbatch_per_dp_rank = _env_int(
+        "MB_TOKENS_PER_MB", config.model.max_context_length
+    )
+    config.metrics = MetricsProcessor.Config(log_freq=1)
+    return replace(config)
+
+
+__all__ = [
+    "moonlight_slice",
+    "kimi_k2_5_slice",
+    "debugmodel",
+    "kimi_k3_debug",
+    "moonlight_16b",
+]
