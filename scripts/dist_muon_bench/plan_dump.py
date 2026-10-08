@@ -9,7 +9,7 @@
 Run as one logical rank under the fake backend, e.g.
 
   NGPU=8 LOCAL_RANK=0 python plan_dump.py --module bench_configs \
-      --config moonlight_slice --comm.backend=fake --mb.out=/path/plan.json
+      --config moonlight_slice --comm-backend fake --mb.out=/path/plan.json
 
 Every rank builds the same plan, so one logical rank can report the compute
 load and traffic of all ranks in its transport groups.

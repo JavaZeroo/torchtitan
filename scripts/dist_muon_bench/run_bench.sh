@@ -1,6 +1,8 @@
 #!/usr/bin/bash
 # Launch the DistMuon harness under torchrun.
-#   NGPU=8 REPO=/path/to/checkout CONFIG=moonlight_slice run_bench.sh --mb.out=... <tyro args>
+#   NGPU=8 REPO=/path/to/checkout CONFIG=moonlight_slice run_bench.sh --mb.out=... [--comm-backend fake]
+# Seed, determinism, steps, TensorBoard and parallelism degrees come from MB_* env
+# variables (see common.apply_harness_env); the config loader takes no field overrides.
 # SHARED_GPU=1 lets several NCCL ranks share one device (local validation only).
 set -e
 NGPU=${NGPU:-8}

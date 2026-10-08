@@ -17,6 +17,9 @@ resident allocator bytes, and SHA-256 digests of every Muon parameter and
 momentum shard after the last step. Identical digests across two checkouts
 mean the optimizer update is bitwise identical.
 
+Run-level settings (seed, determinism, steps, TensorBoard, parallelism
+degrees) are environment variables; see ``common.apply_harness_env``.
+
 Options (``--mb.key=value``):
   out            output directory (required)
   steps          optimizer steps in optim mode (default 12)
@@ -44,6 +47,7 @@ from common import (  # noqa: E402  # pyrefly: ignore [missing-import]
     dist_muon_optimizers,
     dump_json,
     harness_args,
+    load_config,
     tensor_digest,
 )
 
@@ -75,7 +79,7 @@ class _SyntheticGradients:
         self._scale = scale
         self._entries = []
         rank = dist.get_rank()
-        for optimizer in engine.optimizers:
+        for optimizer in engine.optim.optimizers:
             names = optimizer.param_groups[0].get("param_names")
             for group in optimizer.param_groups:
                 for index, param in enumerate(group["params"]):

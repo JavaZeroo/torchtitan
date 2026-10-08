@@ -18,26 +18,28 @@ Environment knobs (read when the config function runs):
   MB_SEQ_LEN      context length (default 512)
   MB_BUCKET_LAYERS  MoE layers per DistMuon bucket (default: the recipe's 2)
   MB_TOKENS_PER_MB  tokens per microbatch per dp rank for train mode (default: seq_len)
+Run-level knobs (seed, steps, TensorBoard, parallelism degrees) are applied
+afterwards by ``common.apply_harness_env``.
 """
 
 from __future__ import annotations
 
 import os
 
-import torchtitan.models.kimi_k2_7 as kimi_models
 from torchtitan.components.data import ConcatThenSplitPackingConfig, GrainDataLoader
 from torchtitan.components.loss import ChunkedLossWrapper, CrossEntropyLoss
-from torchtitan.components.optimizer import LRSchedulersContainer
+from torchtitan.components.optim import DistMuon, LRSchedulersContainer, Optim
 from torchtitan.config import TrainingConfig
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.distributed.activation_checkpoint import SelectiveAC
+from torchtitan.distributed.flex_shard import BucketConfig
 from torchtitan.hf_datasets.text_datasets import DATASETS
 from torchtitan.models.common import ComplexRoPE, Embedding, Linear, RMSNorm, Sigmoid
 from torchtitan.models.common.config_utils import decoder_vocab_size
-from torchtitan.models.kimi_k2_7 import config_registry as kimi, KimiK25Model
-from torchtitan.models.kimi_k2_7.sharding import set_kimi_k2_5_sharding_config
+from torchtitan.models.kimi_k2_7 import flavors as kimi_models, KimiK25Model
 from torchtitan.observability.metrics import MetricsProcessor
 from torchtitan.trainer import Trainer
+from torchtitan_recipes.tests.models import kimi_k2_7 as kimi
 
 
 def _env_int(name: str, default: int) -> int:
@@ -59,7 +61,6 @@ def _model(
     vocab_size: int,
 ) -> KimiK25Model.Config:
     layers = kimi_models._build_kimi_layers(
-        enable_sp=True,
         n_layers=n_layers,
         n_dense_layers=1,
         dim=dim,
@@ -79,8 +80,6 @@ def _model(
         router_route_scale=2.446,
         router_route_norm=True,
         attn_backend="flex",
-        moe_comm_backend="standard",
-        non_blocking_capacity_factor=None,
         rope=ComplexRoPE.Config(
             dim=64,
             max_context_length=seq_len,
@@ -120,7 +119,7 @@ def _regroup_buckets(optimizer_config, layers_per_bucket: int):
     muon = next(
         optimizer
         for optimizer in optimizer_config.optimizers
-        if isinstance(optimizer, kimi.DistMuon.Config)
+        if isinstance(optimizer, DistMuon.Config)
     )
     by_layer: dict[tuple[int, bool], list[str]] = {}
     for bucket in muon.bucket_configs:
@@ -143,10 +142,10 @@ def _regroup_buckets(optimizer_config, layers_per_bucket: int):
         ]
         routed = [f for layer in layer_ids for f in by_layer.get((layer, True), [])]
         if non_routed:
-            buckets.append(kimi.BucketConfig(name=name, patterns=tuple(non_routed)))
+            buckets.append(BucketConfig(name=name, patterns=tuple(non_routed)))
         if routed:
             buckets.append(
-                kimi.BucketConfig(name=f"{name}.routed-experts", patterns=tuple(routed))
+                BucketConfig(name=f"{name}.routed-experts", patterns=tuple(routed))
             )
     optimizers = [
         replace(o, bucket_configs=tuple(buckets)) if o is muon else o
@@ -180,12 +179,14 @@ def _trainer_config(model_config: KimiK25Model.Config, *, ep: int) -> Trainer.Co
         dataloader=GrainDataLoader.Config(
             dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
         ),
-        optimizer=optimizer,
-        lr_scheduler=LRSchedulersContainer.Config(
-            warmup_steps=2,
-            decay_ratio=0.8,
-            decay_type="linear",
-            min_lr_factor=0.0,
+        optim=Optim.Config(
+            optimizer=optimizer,
+            lr_scheduler=LRSchedulersContainer.Config(
+                warmup_steps=2,
+                decay_ratio=0.8,
+                decay_type="linear",
+                min_lr_factor=0.0,
+            ),
         ),
         training=TrainingConfig(
             num_tokens_per_microbatch_per_dp_rank=tokens_per_microbatch,
@@ -237,10 +238,28 @@ def kimi_k2_5_slice() -> Trainer.Config:
 
 def debugmodel() -> Trainer.Config:
     """The CI recipe (Kimi K2.5 debugmodel, FSDP 8 x EP 8) for loss validation."""
-    from torchtitan_recipes.tests.models import kimi_k2_5_debugmodel_muon_fsdp8_ep8
+    from torchtitan_recipes.tests.suites.models import (
+        kimi_k2_5_debugmodel_muon_fsdp8_ep8,
+    )
 
     return kimi_k2_5_debugmodel_muon_fsdp8_ep8()
 
 
-__all__ = ["moonlight_slice", "kimi_k2_5_slice", "debugmodel"]
-_ = set_kimi_k2_5_sharding_config
+def kimi_k3_debug() -> Trainer.Config:
+    """The Kimi K3 debugmodel (per-head Muon, KDA) at FSDP 8 x EP 8."""
+    from dataclasses import replace
+
+    from torchtitan_recipes.tests.models.kimi_k3 import kimi_k3_debugmodel
+
+    config = kimi_k3_debugmodel(seq_len=512)
+    return replace(
+        config,
+        parallelism=replace(
+            config.parallelism,
+            data_parallel_shard_degree=8,
+            expert_parallel_degree=8,
+        ),
+    )
+
+
+__all__ = ["moonlight_slice", "kimi_k2_5_slice", "debugmodel", "kimi_k3_debug"]
