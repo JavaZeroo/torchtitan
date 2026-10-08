@@ -118,6 +118,39 @@ def main():
     print("top host ops (inclusive):")
     for name, (n, dur) in sorted(by_cpu.items(), key=lambda kv: -kv[1][1])[:12]:
         print(f"  {dur / 1e3:9.2f} ms  n={n:5d}  {name}")
+    # CUDA runtime calls: launches, graph launches, syncs and allocations.
+    runtime = [
+        e
+        for e in events
+        if e.get("ph") == "X" and e.get("cat") in ("cuda_runtime", "cuda_driver")
+    ]
+    by_api = defaultdict(lambda: [0, 0.0])
+    for e in runtime:
+        entry = by_api[e["name"]]
+        entry[0] += 1
+        entry[1] += e.get("dur", 0)
+    if cpu:
+        cpu_span = max(e["ts"] + e.get("dur", 0) for e in cpu) - min(
+            e["ts"] for e in cpu
+        )
+        print(f"host span first->last cpu op: {cpu_span / 1e3:.2f} ms")
+    print("cuda runtime calls (inclusive host time):")
+    for name, (n, dur) in sorted(by_api.items(), key=lambda kv: -kv[1][1])[:10]:
+        print(f"  {dur / 1e3:9.2f} ms  n={n:6d}  {name}")
+    # Idle gaps on the busiest stream: where the device waited for the host.
+    busiest = max(by_stream.items(), key=lambda kv: union(kv[1]))[1]
+    ordered = sorted(busiest)
+    gaps = [
+        ordered[i + 1][0] - ordered[i][1]
+        for i in range(len(ordered) - 1)
+        if ordered[i + 1][0] > ordered[i][1]
+    ]
+    big = [g for g in gaps if g >= 50]
+    print(
+        f"busiest-stream gaps: total {sum(gaps) / 1e3:.2f} ms over {len(gaps)} gaps; "
+        f">=50us: {len(big)} gaps, {sum(big) / 1e3:.2f} ms; "
+        f"largest {max(gaps) / 1e3 if gaps else 0:.2f} ms"
+    )
 
 
 if __name__ == "__main__":

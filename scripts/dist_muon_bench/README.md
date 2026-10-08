@@ -11,7 +11,8 @@ scripts run against any checkout (set `REPO=`).
 | `muon_bench.py` | `--mb.mode=optim`: DistMuon alone with deterministic synthetic gradients; `--mb.mode=train`: the real training loop with the optimizer phase timed. Both write per-rank JSON with timings, allocator bytes and SHA-256 digests of every Muon parameter and momentum shard, plus an optional Kineto trace |
 | `compare_runs.py` | digest equality and timing/memory comparison of two `muon_bench` output directories |
 | `tb_metrics.py` | full-precision loss / grad_norm from TensorBoard, compared bitwise |
-| `trace_report.py`, `trace_svg.py` | per-stream and per-kernel-family breakdown of one optimizer step, and an SVG timeline |
+| `trace_report.py`, `trace_svg.py` | per-stream and per-kernel-family breakdown of one optimizer step, CUDA runtime calls and idle gaps, and an SVG timeline |
+| `h20_digest.sh` | text-only digest of a session (summary, optimizer share, loss tables, trace reports) for hosts that cannot export files |
 | `summarize_session.py` | tables over a results tree `results/<variant>/<experiment>/rank*.json` |
 | `run_bench.sh` | torchrun launcher; `SHARED_GPU=1` lets several NCCL ranks share one GPU for local numerics checks (`NCCL_MULTI_RANK_GPU_ENABLE=1`) |
 | `bmm_invariance_probe.py` | is batched Newton-Schulz bitwise invariant to how the batch is chunked on this GPU (decides whether piecewise orthogonalization is exact) |

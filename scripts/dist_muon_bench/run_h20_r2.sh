@@ -71,6 +71,7 @@ for v in base full; do
 done
 
 "$VENV/bin/python" "$H/summarize_session.py" "$RES" > "$RES/summary.txt" 2>&1 || true
+bash "$H/h20_digest.sh" "$WORK"
 STAMP=$(date +%Y%m%d_%H%M)
 tar -C "$WORK" -czf "$WORK/results_h20_r2_$STAMP.tgz" --exclude='comm_traces' --exclude='structured_logs' --exclude='*/dump/profile_trace' results
 echo "SESSION_DONE -> $WORK/results_h20_r2_$STAMP.tgz"
