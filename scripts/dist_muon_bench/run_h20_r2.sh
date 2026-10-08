@@ -62,8 +62,8 @@ for v in base full; do
   fi
   run $v moonlight16b_optim env MODULE=torchtitan_recipes.tests.models.kimi_k2_7 CONFIG=moonlight_16b_a3b \
     bash "$H/run_bench.sh" --mb.steps=12 --mb.warmup=3 --mb.profile_step=8 --mb.profile_ranks=0,3
-  # The production model on local c4_test data (no HF streaming), 4k context,
-  # 16k tokens per rank per microbatch.
+  # The production model on local test data and tokenizer, 4k context, 16k
+  # tokens per rank per microbatch.
   train $v moonlight16b_train_16k moonlight_16b 8 MB_SEQ_LEN=4096 MB_TOKENS_PER_MB=16384
 done
 

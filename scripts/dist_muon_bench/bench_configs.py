@@ -265,15 +265,18 @@ def kimi_k3_debug() -> Trainer.Config:
 def moonlight_16b() -> Trainer.Config:
     """The Moonlight 16B-A3B production recipe on the repository's c4_test data.
 
-    Same model, vocabulary and optimizer as the production recipe; only the
-    dataset is local, so training steps need no Hugging Face streaming. The
-    tokenizer still has to be downloaded to ./assets/hf/Moonlight-16B-A3B.
+    Same model, vocabulary and optimizer as the production recipe; the data
+    and the tokenizer are the repository's test assets, so no download is
+    needed. The Moonlight Hugging Face repo ships only a tiktoken model that
+    HuggingFaceTokenizer cannot load; the test tokenizer's ids fall inside
+    the model's 163840-entry vocabulary, which is all the optimizer needs.
     """
     from dataclasses import replace
 
     from torchtitan_recipes.tests.models.kimi_k2_7 import moonlight_16b_a3b
 
     config = moonlight_16b_a3b(seq_len=_env_int("MB_SEQ_LEN", 4096))
+    config.hf_assets_path = "./tests/assets/tokenizer"
     config.dataloader = GrainDataLoader.Config(
         dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
     )
