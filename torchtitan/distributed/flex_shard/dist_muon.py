@@ -62,10 +62,13 @@ _NEWTON_SCHULZ_DTYPE = torch.bfloat16
 
 # A contiguous matrix batch larger than this is orthogonalized in pieces of at
 # least two matrices, which bounds the Newton-Schulz temporaries of one call
-# to a few hundred MiB. Batched GEMMs give the same bits for any batch of two
-# or more matrices, so the pieces reproduce the whole-batch result exactly; a
-# batch of one takes a different kernel path and is never split off.
-_NEWTON_SCHULZ_PIECE_NUMEL = 2**26
+# to under a GiB. Batched GEMMs give the same bits for any batch of two or
+# more matrices, so the pieces reproduce the whole-batch result exactly; a
+# batch of one takes a different kernel path and is never split off. On H20
+# with 48 Kimi K2.5 experts per rank, 2^26 pieces (4 matrices of 2048x7168)
+# cost 3.5% GEMM time to tail effects, 2^27 pieces 1% for the same peak
+# memory, and 2^28 pieces 0.6% for 0.6 GiB more.
+_NEWTON_SCHULZ_PIECE_NUMEL = 2**27
 
 # Inputs up to this many elements replay a captured kernel sequence; above it
 # the GEMMs run long enough that launch cost is noise, and keeping their
