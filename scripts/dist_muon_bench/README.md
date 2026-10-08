@@ -15,7 +15,7 @@ scripts run against any checkout (set `REPO=`).
 | `summarize_session.py` | tables over a results tree `results/<variant>/<experiment>/rank*.json` |
 | `run_bench.sh` | torchrun launcher; `SHARED_GPU=1` lets several NCCL ranks share one GPU for local numerics checks (`NCCL_MULTI_RANK_GPU_ENABLE=1`) |
 | `bmm_invariance_probe.py` | is batched Newton-Schulz bitwise invariant to how the batch is chunked on this GPU (decides whether piecewise orthogonalization is exact) |
-| `setup_h20.sh`, `run_h20.sh` | one-shot session on an 8-GPU host: environment, variant worktrees from the branch history, every experiment base vs variants, tests, probe, summary and a results tarball |
+| `setup_h20.sh`, `run_h20.sh`, `run_h20_r2.sh`, `h20_lib.sh` | one-shot sessions on an 8-GPU host: environment, variant worktrees from the branch history, every experiment base vs variants, tests, probe, summary and a results tarball; round 2 adds HSDP duplication, threshold sweeps at scale, production-like training and the Moonlight 16B recipe |
 
 Run-level settings are environment variables, applied by
 `common.apply_harness_env` after the recipe is built (the config loader only
@@ -53,6 +53,7 @@ From the optimized checkout, with internet access:
 ```bash
 bash scripts/dist_muon_bench/setup_h20.sh ~/distmuon_h20   # venv with the PyTorch nightly TorchTitan main needs
 bash scripts/dist_muon_bench/run_h20.sh ~/distmuon_h20     # about 1-2 hours on 8x H20
+bash scripts/dist_muon_bench/run_h20_r2.sh ~/distmuon_h20  # round 2, about 2-3 hours
 ```
 
 `run_h20.sh` is restartable (finished experiments are skipped) and ends with
