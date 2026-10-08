@@ -261,11 +261,21 @@ def _apply_runtime_overrides() -> None:
 
         # pyrefly: ignore [bad-assignment]
         _optimizer_reshard_runtime._NUM_PIPELINE_SLOTS = int(slots)
-    if os.environ.get("MB_NO_NS_GRAPHS"):
-        from torchtitan.distributed.flex_shard import dist_muon
+    from torchtitan.distributed.flex_shard import dist_muon
 
+    if os.environ.get("MB_NO_NS_GRAPHS"):
         if hasattr(dist_muon, "_NEWTON_SCHULZ_GRAPH_MAX_NUMEL"):
             dist_muon._NEWTON_SCHULZ_GRAPH_MAX_NUMEL = -1
+    # Sweep knobs: largest Newton-Schulz input replayed from a CUDA graph and
+    # the batch size above which a matrix batch is orthogonalized in pieces.
+    # Both are plain integers (e.g. 16777216); they only exist on the
+    # optimized branch and are ignored elsewhere.
+    for env, name in (
+        ("MB_NS_GRAPH_MAX_NUMEL", "_NEWTON_SCHULZ_GRAPH_MAX_NUMEL"),
+        ("MB_NS_PIECE_NUMEL", "_NEWTON_SCHULZ_PIECE_NUMEL"),
+    ):
+        if os.environ.get(env) and hasattr(dist_muon, name):
+            setattr(dist_muon, name, int(os.environ[env]))
 
 
 def run_optim(options, argv) -> None:
@@ -308,7 +318,7 @@ def run_optim(options, argv) -> None:
             torch.cuda.synchronize()
         else:
             recorder.run(step, optimizer_step)
-        for optimizer in engine.optimizers:
+        for optimizer in engine.optim.optimizers:
             optimizer.zero_grad(set_to_none=True)
 
     _write(out_dir, rank, "optim", muons, recorder, warmup)
@@ -318,15 +328,12 @@ def run_optim(options, argv) -> None:
 
 
 def run_train(options, argv) -> None:
-    from typing import cast
-
-    from torchtitan.config import ConfigManager
-    from torchtitan.trainer import Trainer
-
     _apply_runtime_overrides()
     out_dir = options["out"]
     warmup = int(options.get("warmup", 3))
-    config = cast(Trainer.Config, ConfigManager().parse_args(argv))
+    config = load_config(argv)
+    # Metrics (TensorBoard under MB_TB=1) land next to the harness output.
+    config.dump_folder = os.path.join(out_dir, "dump")
     trainer = config.build()
     engine = trainer.engine
     muons = dist_muon_optimizers(engine)
