@@ -11,7 +11,12 @@ declare -A VARIANT=(
 )
 for v in base abc g full; do
   sha=$(git rev-parse "${VARIANT[$v]}")
-  if [ ! -d "$CODE/$v" ]; then git worktree add -f --detach "$CODE/$v" "$sha" >/dev/null; fi
+  if [ ! -d "$CODE/$v" ]; then
+    git worktree add -f --detach "$CODE/$v" "$sha" >/dev/null
+  elif [ "$(git -C "$CODE/$v" rev-parse HEAD)" != "$sha" ]; then
+    # An existing worktree (full = HEAD after a pull) moves to the new commit.
+    git -C "$CODE/$v" checkout -q --detach "$sha"
+  fi
   echo "$sha" > "$CODE/$v/.commit"
   echo "variant $v = $sha $(git log -1 --format=%s "$sha")"
 done
