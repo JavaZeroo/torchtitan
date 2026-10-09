@@ -332,8 +332,9 @@ def run_train(options, argv) -> None:
     out_dir = options["out"]
     warmup = int(options.get("warmup", 3))
     config = load_config(argv)
-    # Metrics (TensorBoard under MB_TB=1) land next to the harness output.
-    config.dump_folder = os.path.join(out_dir, "dump")
+    # Metrics (TensorBoard under MB_TB=1) and checkpoints land next to the
+    # harness output unless a resumed run points at an earlier dump folder.
+    config.dump_folder = os.environ.get("MB_DUMP_DIR") or os.path.join(out_dir, "dump")
     trainer = config.build()
     engine = trainer.engine
     muons = dist_muon_optimizers(engine)
@@ -358,6 +359,9 @@ def run_train(options, argv) -> None:
 
 
 def main() -> None:
+    from torchtitan.observability.logging import init_logger
+
+    init_logger()
     options, argv = harness_args()
     if "out" not in options:
         raise SystemExit("--mb.out=<dir> is required")

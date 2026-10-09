@@ -12,7 +12,8 @@ GPUs. The vocabulary is shrunk because embeddings and the LM head belong to
 AdamW and only cost memory here.
 
 Environment knobs (read when the config function runs):
-  MB_LAYERS       total transformer layers, first one dense (default per flavor)
+  MB_LAYERS       total transformer layers (default per flavor)
+  MB_DENSE_LAYERS leading dense (non-MoE) layers (default 1; MB_LAYERS makes a dense stack)
   MB_EXPERTS      routed experts per MoE layer (default per flavor)
   MB_VOCAB        vocabulary size (default 4096)
   MB_SEQ_LEN      context length (default 512)
@@ -25,6 +26,7 @@ afterwards by ``common.apply_harness_env``.
 from __future__ import annotations
 
 import os
+from typing import Any
 
 from torchtitan.components.data import ConcatThenSplitPackingConfig, GrainDataLoader
 from torchtitan.components.loss import ChunkedLossWrapper, CrossEntropyLoss
@@ -62,7 +64,7 @@ def _model(
 ) -> KimiK25Model.Config:
     layers = kimi_models._build_kimi_layers(
         n_layers=n_layers,
-        n_dense_layers=1,
+        n_dense_layers=_env_int("MB_DENSE_LAYERS", 1),
         dim=dim,
         n_heads=n_heads,
         q_lora_rank=q_lora_rank,
@@ -262,6 +264,87 @@ def kimi_k3_debug() -> Trainer.Config:
     )
 
 
+def kimi_k3_slice() -> Trainer.Config:
+    """Kimi K3 released topology (dim 7168, 96 heads, latent MoE) cut to a few layers.
+
+    Layer 0 is the dense FFN layer, every fourth layer from index 3 and the
+    last layer are MLA, the rest KDA, as in the released model. Text-only
+    (no vision encoder), the repository's test tokenizer and data, and the
+    K3 recipe's BF16 training dtype and per-head DistMuon layouts.
+    """
+    from typing import cast
+
+    from torchtitan.models.kimi_k3 import flavors as k3_flavors
+    from torchtitan_recipes.tests.models import kimi_k3 as k3
+
+    n_layers = _env_int("MB_LAYERS", 5)
+    num_experts = _env_int("MB_EXPERTS", 32)
+    seq_len = _env_int("MB_SEQ_LEN", 4096)
+    model_config = k3_flavors._kimi_k3_config(
+        max_context_length=seq_len,
+        dim=7168,
+        vocab_size=_env_int("MB_VOCAB", 4096),
+        num_layers=n_layers,
+        full_attention_layers=set(range(3, n_layers - 1, 4)) | {n_layers - 1},
+        attn_res_block_size=12,
+        num_heads=96,
+        q_lora_rank=1536,
+        kv_lora_rank=512,
+        qk_nope_head_dim=128,
+        qk_rope_head_dim=64,
+        v_head_dim=128,
+        kda_head_dim=128,
+        conv_kernel_size=4,
+        dense_hidden_dim=33792,
+        latent_dim=3584,
+        expert_hidden_dim=3072,
+        num_experts=num_experts,
+        top_k=min(16, num_experts),
+        num_shared_experts=2,
+        vision_encoder=cast(Any, None),
+        attn_backend="flex",
+    )
+    parallelism = ParallelismConfig(expert_parallel_degree=_env_int("MB_EP", 8))
+    tokens_per_microbatch = _env_int("MB_TOKENS_PER_MB", seq_len)
+    return k3._KimiK3TrainerConfig(
+        loss=ChunkedLossWrapper.Config(
+            loss_fn=CrossEntropyLoss.Config(
+                global_vocab_size=decoder_vocab_size(model_config),
+            ),
+        ),
+        hf_assets_path="./tests/assets/tokenizer",
+        metrics=MetricsProcessor.Config(log_freq=1),
+        model=model_config,
+        dataloader=GrainDataLoader.Config(
+            dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
+        ),
+        optim=Optim.Config(
+            optimizer=k3._dist_muon_optimizer(
+                model_config,
+                muon_lr=3e-4,
+                adamw_lr=3e-4,
+                parallelism=parallelism,
+            ),
+            lr_scheduler=LRSchedulersContainer.Config(
+                warmup_steps=2,
+                decay_ratio=0.8,
+                decay_type="linear",
+                min_lr_factor=0.0,
+            ),
+        ),
+        training=TrainingConfig(
+            num_tokens_per_microbatch_per_dp_rank=tokens_per_microbatch,
+            max_context_length=seq_len,
+            steps=10,
+            dtype="bfloat16",
+            disable_cuda_graphs=True,
+        ),
+        parallelism=parallelism,
+        checkpointer=None,
+        activation_checkpoint=SelectiveAC.Config(),
+    )
+
+
 def moonlight_16b() -> Trainer.Config:
     """The Moonlight 16B-A3B production recipe on the repository's c4_test data.
 
@@ -275,13 +358,14 @@ def moonlight_16b() -> Trainer.Config:
 
     from torchtitan_recipes.tests.models.kimi_k2_7 import moonlight_16b_a3b
 
-    config = moonlight_16b_a3b(seq_len=_env_int("MB_SEQ_LEN", 4096))
+    seq_len = _env_int("MB_SEQ_LEN", 4096)
+    config = moonlight_16b_a3b(seq_len=seq_len)
     config.hf_assets_path = "./tests/assets/tokenizer"
     config.dataloader = GrainDataLoader.Config(
         dataset=ConcatThenSplitPackingConfig(dataset=DATASETS["c4_test"]),
     )
     config.training.num_tokens_per_microbatch_per_dp_rank = _env_int(
-        "MB_TOKENS_PER_MB", config.model.max_context_length
+        "MB_TOKENS_PER_MB", seq_len
     )
     config.metrics = MetricsProcessor.Config(log_freq=1)
     return replace(config)
@@ -292,5 +376,6 @@ __all__ = [
     "kimi_k2_5_slice",
     "debugmodel",
     "kimi_k3_debug",
+    "kimi_k3_slice",
     "moonlight_16b",
 ]

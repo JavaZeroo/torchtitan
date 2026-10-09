@@ -6,7 +6,7 @@ scripts run against any checkout (set `REPO=`).
 
 | script | purpose |
 |---|---|
-| `bench_configs.py` | `moonlight_slice`, `kimi_k2_5_slice` (production shapes cut to `MB_LAYERS` layers, `MB_EXPERTS` experts), `debugmodel` (the Kimi K2.5 CI recipe), `kimi_k3_debug` (the K3 debugmodel at FSDP 8 x EP 8) and `moonlight_16b` (the production recipe on local c4_test data) |
+| `bench_configs.py` | `moonlight_slice`, `kimi_k2_5_slice` (production shapes cut to `MB_LAYERS` layers, `MB_EXPERTS` experts), `debugmodel` (the Kimi K2.5 CI recipe), `kimi_k3_debug` (the K3 debugmodel at FSDP 8 x EP 8), `kimi_k3_slice` (K3 released shapes cut to `MB_LAYERS` layers, text-only, BF16) and `moonlight_16b` (the production recipe on local test data) |
 | `plan_dump.py` | static plan: buckets, layouts, compute placement, per-rank Newton-Schulz FLOPs, traffic and reserved buffers; runs as one logical rank under `--comm-backend fake` |
 | `muon_bench.py` | `--mb.mode=optim`: DistMuon alone with deterministic synthetic gradients; `--mb.mode=train`: the real training loop with the optimizer phase timed. Both write per-rank JSON with timings, allocator bytes and SHA-256 digests of every Muon parameter and momentum shard, plus an optional Kineto trace |
 | `compare_runs.py` | digest equality and timing/memory comparison of two `muon_bench` output directories |
@@ -17,7 +17,8 @@ scripts run against any checkout (set `REPO=`).
 | `run_bench.sh` | torchrun launcher; `SHARED_GPU=1` lets several NCCL ranks share one GPU for local numerics checks (`NCCL_MULTI_RANK_GPU_ENABLE=1`) |
 | `ns_shape_bench.py` | times Newton-Schulz per matrix-view shape of a plan (as issued vs one merged batch per shape class), from a `plan_dump.py` JSON with `view_shapes_by_rank` |
 | `bmm_invariance_probe.py` | is batched Newton-Schulz bitwise invariant to how the batch is chunked on this GPU (decides whether piecewise orthogonalization is exact) |
-| `setup_h20.sh`, `run_h20.sh`, `run_h20_r2.sh`, `h20_lib.sh` | one-shot sessions on an 8-GPU host: environment, variant worktrees from the branch history, every experiment base vs variants, tests, probe, summary and a results tarball; round 2 adds HSDP duplication, threshold sweeps at scale, production-like training and the Moonlight 16B recipe |
+| `nccl_bw_probe.py` | all-gather, reduce-scatter and all-to-all bus bandwidth over the world and sub-groups (what a replica dedupe would pay) |
+| `setup_h20.sh`, `run_h20.sh`, `run_h20_r2.sh`, `run_h20_r3.sh`, `h20_lib.sh` | one-shot sessions on an 8-GPU host: environment, variant worktrees from the branch history, every experiment base vs variants, tests, probe, summary and a results tarball; round 2 adds HSDP duplication, threshold sweeps at scale, production-like training and the Moonlight 16B recipe |
 
 Run-level settings are environment variables, applied by
 `common.apply_harness_env` after the recipe is built (the config loader only
@@ -28,7 +29,8 @@ takes `--module`, `--config`, `--comm-backend`):
 | `MB_SEED` (default 42), `MB_DETERMINISTIC` (default 1) | `debug.seed`, `debug.deterministic`; required for stable digests |
 | `MB_STEPS`, `MB_TIMEOUT` | `training.steps` in train mode; collective timeout in seconds |
 | `MB_TB=1` | TensorBoard every step under `<out>/dump/tb` |
-| `MB_DP_SHARD`, `MB_DP_REPLICATE`, `MB_EP` | parallelism degrees, rebuilt through the recipe so expert layouts realign |
+| `MB_DP_SHARD`, `MB_DP_REPLICATE`, `MB_EP`, `MB_PP`, `MB_PP_MICROBATCHES`, `MB_PP_SCHEDULE` | parallelism, rebuilt through the recipe so expert layouts realign |
+| `MB_CKPT_INTERVAL`, `MB_RESUME_STEP`, `MB_DUMP_DIR` | periodic checkpoints in train mode; a resumed run loads step N from the first run's dump folder |
 | `MB_SLOTS`, `MB_NO_NS_GRAPHS`, `MB_NS_GRAPH_MAX_NUMEL`, `MB_NS_PIECE_NUMEL` | runtime knobs: pipeline slots, disable Newton-Schulz graph replay, graph-replay input threshold, piecewise orthogonalization batch threshold (the last three only act on the optimized branch) |
 
 Examples:
@@ -56,6 +58,7 @@ From the optimized checkout, with internet access:
 bash scripts/dist_muon_bench/setup_h20.sh ~/distmuon_h20   # venv with the PyTorch nightly TorchTitan main needs
 bash scripts/dist_muon_bench/run_h20.sh ~/distmuon_h20     # about 1-2 hours on 8x H20
 bash scripts/dist_muon_bench/run_h20_r2.sh ~/distmuon_h20  # round 2, about 2-3 hours
+bash scripts/dist_muon_bench/run_h20_r3.sh ~/distmuon_h20  # round 3, about 2 hours
 ```
 
 `run_h20.sh` is restartable (finished experiments are skipped) and ends with

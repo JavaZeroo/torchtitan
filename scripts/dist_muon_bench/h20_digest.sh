@@ -21,7 +21,7 @@ echo; echo "##### training runs: optimizer share and memory (rank 0, steps after
 "$PY" - "$RES" <<'PY'
 import glob, json, os, statistics, sys
 root = sys.argv[1]
-for path in sorted(glob.glob(os.path.join(root, "*", "train*", "rank0.json"))):
+for path in sorted(glob.glob(os.path.join(root, "*", "*train*", "rank0.json"))):
     d = json.load(open(path))
     steps = d["steps"][3:] or d["steps"]
     opt = statistics.median(s["total_ms"] for s in steps)
@@ -40,6 +40,11 @@ for exp in $(ls "$RES/base" | grep '^train' | grep -v '\.log$'); do
 done
 echo; echo "##### K3 determinism: base round 1 vs base round 2 (same tree)"
 if [ -d "$RES/base/train_k3_debug_v2" ]; then "$PY" "$H/compare_runs.py" "$RES/base/train_k3_debug" "$RES/base/train_k3_debug_v2" 2>&1 | grep digests; "$PY" "$H/tb_metrics.py" "$RES/base/train_k3_debug/dump/tb" "$RES/base/train_k3_debug_v2/dump/tb" 2>&1 | tail -1; fi
+echo; echo "##### checkpoint resume: uninterrupted 10 steps vs resumed from step 5 (round 3)"
+for v in base full; do
+  if [ -f "$RES/$v/ckpt_moonlight5_resume5/rank0.json" ]; then echo "--- $v"; "$PY" "$H/compare_runs.py" "$RES/$v/ckpt_moonlight5_full10" "$RES/$v/ckpt_moonlight5_resume5" 2>&1 | grep digests; fi
+done
+echo; echo "##### collective bandwidth (round 3)"; cat "$RES/nccl_bw.txt" 2>/dev/null | grep -E "H20|group"
 echo; echo "##### Newton-Schulz time per shape (round 2)"
 cat "$RES"/ns_shapes_*.txt 2>/dev/null
 echo; echo "##### trace reports"
@@ -55,7 +60,8 @@ for e in k25_3_e256_ep8 k25_3_e256_ep8_piece_none k25_3_e256_ep8_piece_28 k25_3_
 report base k25_3_e384_ep8 0
 for v in base full; do report $v k25_3_hsdp2x4 0; report $v k25_3_hsdp2x4 3; report $v moonlight13_hsdp2x4 0; done
 # round 2 experiments, if present
-for e in k25_3_fsdp4 k25_3_hsdp4x2 k25_3_hsdp2x4_trace01 k25_3_e384_ep8_graph_30 k25_3_e384_ep8_piece_27 moonlight27_ep8_graph_30 moonlight13_e256_ep8 moonlight16b_optim k3_debug_optim; do
+for e in k25_3_fsdp4 k25_3_hsdp4x2 k25_3_hsdp2x4_trace01 k25_3_e384_ep8_graph_30 k25_3_e384_ep8_piece_27 moonlight27_ep8_graph_30 moonlight13_e256_ep8 moonlight16b_optim k3_debug_optim \
+         k3_5_ep8 k3_5_e64_ep8 k3_9_ep8 k25_3_e512_ep8 k25_dense4_ep8 moonlight_dense8_ep8 k25_3_e256_hsdp2x4; do
   for v in base full; do report $v $e 0; done
 done
 report full k25_3_hsdp2x4_trace01 1

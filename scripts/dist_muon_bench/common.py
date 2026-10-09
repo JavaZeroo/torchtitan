@@ -33,8 +33,13 @@ def apply_harness_env(config):
       MB_STEPS          training steps for train mode
       MB_TIMEOUT        collective timeout in seconds (init and train)
       MB_TB             1 enables TensorBoard metrics every step under dump/tb
-      MB_DP_SHARD, MB_DP_REPLICATE, MB_EP  parallelism degrees (rebuilt through
-                        the recipe's __post_init__ so expert layouts realign)
+      MB_DP_SHARD, MB_DP_REPLICATE, MB_EP, MB_PP, MB_PP_MICROBATCHES,
+      MB_PP_SCHEDULE    parallelism (rebuilt through the recipe's __post_init__
+                        so expert layouts realign)
+      MB_CKPT_INTERVAL  save a checkpoint every N steps (train mode)
+      MB_RESUME_STEP    load that checkpoint step before training
+      MB_DUMP_DIR       dump folder for train mode (default <out>/dump); point a
+                        resumed run at the first run's folder
     Returns the (possibly replaced) config.
     """
     from dataclasses import replace
@@ -48,16 +53,33 @@ def apply_harness_env(config):
         config.metrics.enable_tensorboard = True
         config.metrics.log_freq = 1
         config.metrics.save_tb_folder = "tb"
-    degrees = {}
+    degrees: dict[str, Any] = {}
     for env, field_name in (
         ("MB_DP_SHARD", "data_parallel_shard_degree"),
         ("MB_DP_REPLICATE", "data_parallel_replicate_degree"),
         ("MB_EP", "expert_parallel_degree"),
+        ("MB_PP", "pipeline_parallel_degree"),
+        ("MB_PP_MICROBATCHES", "num_pp_microbatches"),
     ):
         if os.environ.get(env):
             degrees[field_name] = int(os.environ[env])
+    if os.environ.get("MB_PP_SCHEDULE"):
+        degrees["pipeline_parallel_schedule"] = os.environ["MB_PP_SCHEDULE"]
     if degrees:
         config = replace(config, parallelism=replace(config.parallelism, **degrees))
+    if os.environ.get("MB_CKPT_INTERVAL"):
+        # Periodic checkpoints under <dump_folder>/checkpoint; a resumed run
+        # sets MB_RESUME_STEP and the same MB_DUMP_DIR.
+        from torchtitan.components.checkpointer import CheckpointManager
+
+        config.checkpointer = CheckpointManager.Config(
+            interval=int(os.environ["MB_CKPT_INTERVAL"]),
+            last_save_model_only=False,
+        )
+        if os.environ.get("MB_RESUME_STEP"):
+            # The loader's --resume-step runs before this hook, so the resume
+            # step is a harness knob as well.
+            config.checkpointer.load_step = int(os.environ["MB_RESUME_STEP"])
     return config
 
 
