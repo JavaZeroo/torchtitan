@@ -11,6 +11,7 @@ scripts run against any checkout (set `REPO=`).
 | `muon_bench.py` | `--mb.mode=optim`: DistMuon alone with deterministic synthetic gradients; `--mb.mode=train`: the real training loop with the optimizer phase timed. Both write per-rank JSON with timings, allocator bytes and SHA-256 digests of every Muon parameter and momentum shard, plus an optional Kineto trace |
 | `compare_runs.py` | digest equality and timing/memory comparison of two `muon_bench` output directories |
 | `tb_metrics.py` | full-precision loss / grad_norm from TensorBoard, compared bitwise |
+| `report_figures.py` | PNG figures for issues and reports: per-stream step timelines from traces, per-rank Newton-Schulz load from plans |
 | `trace_report.py`, `trace_svg.py` | per-stream and per-kernel-family breakdown of one optimizer step, CUDA runtime calls and idle gaps, and an SVG timeline |
 | `h20_digest.sh` | text-only digest of a session (summary, optimizer share, loss tables, trace reports) for hosts that cannot export files |
 | `summarize_session.py` | tables over a results tree `results/<variant>/<experiment>/rank*.json` |
