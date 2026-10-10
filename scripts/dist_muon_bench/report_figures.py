@@ -80,7 +80,7 @@ def _runs(segments, t0, bin_us):
         fams = busy[b]
         if sum(fams.values()) < 0.15 * bin_us:
             continue
-        fam = max(fams, key=fams.get)
+        fam = max(fams, key=lambda name: fams[name])
         start_ms = b * bin_us / 1e3
         if (
             runs
