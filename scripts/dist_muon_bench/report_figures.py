@@ -229,11 +229,11 @@ def _depths(events):
     """Nesting depth of X events on one thread, by timestamp containment."""
     out = []
     stack = []
-    for e in sorted(events, key=lambda e: (e["ts"], -e.get("dur", 0))):
-        end = e["ts"] + e.get("dur", 0)
-        while stack and stack[-1] <= e["ts"]:
+    for event in sorted(events, key=lambda e: (e["ts"], -e.get("dur", 0))):
+        end = event["ts"] + event.get("dur", 0)
+        while stack and stack[-1] <= event["ts"]:
             stack.pop()
-        out.append((e, len(stack)))
+        out.append((event, len(stack)))
         stack.append(end)
     return out
 
