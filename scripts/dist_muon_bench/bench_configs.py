@@ -35,7 +35,11 @@ from torchtitan.config import TrainingConfig
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.distributed.activation_checkpoint import SelectiveAC
 from torchtitan.distributed.flex_shard import BucketConfig
-from torchtitan.hf_datasets.text_datasets import DATASETS
+
+try:
+    from torchtitan.components.data.text_datasets import DATASETS
+except ImportError:  # checkouts before the data package move
+    from torchtitan.hf_datasets.text_datasets import DATASETS
 from torchtitan.models.common import ComplexRoPE, Embedding, Linear, RMSNorm, Sigmoid
 from torchtitan.models.common.config_utils import decoder_vocab_size
 from torchtitan.models.kimi_k2_7 import flavors as kimi_models, KimiK25Model
