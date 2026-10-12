@@ -244,9 +244,12 @@ def kimi_k2_5_slice() -> Trainer.Config:
 
 def debugmodel() -> Trainer.Config:
     """The CI recipe (Kimi K2.5 debugmodel, FSDP 8 x EP 8) for loss validation."""
-    from torchtitan_recipes.tests.suites.models import (
-        kimi_k2_5_debugmodel_muon_fsdp8_ep8,
-    )
+    try:
+        from tests.integration_tests.models import kimi_k2_5_debugmodel_muon_fsdp8_ep8
+    except ImportError:  # checkouts before the test reorganization
+        from torchtitan_recipes.tests.suites.models import (
+            kimi_k2_5_debugmodel_muon_fsdp8_ep8,
+        )
 
     return kimi_k2_5_debugmodel_muon_fsdp8_ep8()
 
