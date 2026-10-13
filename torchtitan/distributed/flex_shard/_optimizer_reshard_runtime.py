@@ -365,13 +365,10 @@ class _BucketedRedistributionRuntime(Generic[_ItemT]):
             redistributed_index += 1
             to_compute = plan.storage_to_compute_schedule
             to_storage = plan.compute_to_storage_schedule
-            wire_requirements = requirements.setdefault(
+            plan_requirements = requirements.setdefault(
                 (plan.device, plan.compute_dtype), _BufferRequirements()
             )
-            storage_requirements = requirements.setdefault(
-                (plan.device, plan.dtype), _BufferRequirements()
-            )
-            wire_requirements.include_communication(
+            plan_requirements.include_communication(
                 storage_exchange_numel=max(
                     to_compute.input_buffer_numel,
                     to_storage.output_buffer_numel,
@@ -384,12 +381,12 @@ class _BucketedRedistributionRuntime(Generic[_ItemT]):
             participant = plan.group.local_participant
             for redistribution_plan in plan.redistribution_plans:
                 storage_partition = redistribution_plan.storage_partition(participant)
-                storage_requirements.include_storage_scratch(
+                plan_requirements.include_storage_scratch(
                     math.prod(storage_partition.tensor_shape)
                 )
                 compute_partition = redistribution_plan.compute_partition(participant)
                 if compute_numel := math.prod(compute_partition.tensor_shape):
-                    wire_requirements.include_compute_scratch(compute_numel)
+                    plan_requirements.include_compute_scratch(compute_numel)
             for item in plan.unredistributed_items:
                 _include_compute_scratch_requirement(
                     requirements,
@@ -683,7 +680,7 @@ def _prepare_redistributed(
         partition = redistribution_plan.storage_partition(participant)
         prepared = slot.storage_partition_buffer(
             partition.tensor_shape,
-            dtype=plan.dtype,
+            dtype=plan.compute_dtype,
             device=plan.device,
         )
         prepare(item, prepared)
@@ -770,7 +767,7 @@ def _finalize_redistributed(
         partition = redistribution_plan.storage_partition(participant)
         update = slot.storage_partition_buffer(
             partition.tensor_shape,
-            dtype=plan.dtype,
+            dtype=plan.compute_dtype,
             device=plan.device,
         )
         spans = schedule.output_spans_by_parameter[index]

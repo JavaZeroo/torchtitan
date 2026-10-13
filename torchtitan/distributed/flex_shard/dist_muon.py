@@ -377,7 +377,6 @@ class DistMuon(Optimizer):
             )
 
         matrix_views_by_fqn = {}
-        direction_row_scale_by_fqn = {}
         for bucket in result.plans:
             if isinstance(bucket, _LocalBucketPlan):
                 for item in bucket.items:
@@ -393,11 +392,13 @@ class DistMuon(Optimizer):
                     matrix_views_by_fqn[item.fqn] = build_views(
                         item, plan.compute_partition(bucket.group.local_participant)
                     )
-                    row_scale = _direction_row_scale(
-                        item, adjust_lr_fn=self._group(item)["adjust_lr_fn"]
-                    )
-                    if row_scale is not None:
-                        direction_row_scale_by_fqn[item.fqn] = row_scale
+        direction_row_scale_by_fqn = {}
+        for item in result.ordered_items:
+            row_scale = _direction_row_scale(
+                item, adjust_lr_fn=self._group(item)["adjust_lr_fn"]
+            )
+            if row_scale is not None:
+                direction_row_scale_by_fqn[item.fqn] = row_scale
         self._bucket_plans = result.plans
         self._parameter_compute_layouts = result.ordered_items
         self._matrix_views_by_fqn = matrix_views_by_fqn
@@ -578,12 +579,6 @@ class DistMuon(Optimizer):
         _compute_muon_direction(
             compute,
             matrix_views=self._matrix_views_by_fqn[compute_layout.fqn],
-            lr_reference_shape=(
-                None
-                if not compute_layout.storage_is_compute_ready
-                else compute_layout.lr_reference_shape
-            ),
-            adjust_lr_fn=group["adjust_lr_fn"],
             ns_coefficients=group["ns_coefficients"],
             ns_steps=group["ns_steps"],
             eps=group["eps"],
@@ -598,7 +593,7 @@ class DistMuon(Optimizer):
             local_param = local_param.detach()
         row_scale = self._direction_row_scale_by_fqn.get(compute_layout.fqn)
         if row_scale is not None:
-            direction.mul_(row_scale)
+            direction = (direction * row_scale).to(local_param.dtype)
         _apply_muon_update(
             local_param,
             direction,
@@ -615,7 +610,7 @@ class DistMuon(Optimizer):
     ) -> tuple[torch.Size, torch.dtype, torch.device]:
         assert compute_layout.storage_is_compute_ready
         tensor = compute_layout.param.to_local().detach()
-        return tensor.shape, tensor.dtype, tensor.device
+        return tensor.shape, compute_layout.compute_dtype, tensor.device
 
 
 @dataclass(frozen=True, slots=True)
@@ -1864,18 +1859,11 @@ def _compute_muon_direction(
     prepared: Tensor,
     *,
     matrix_views: Sequence[_MatrixBatchView],
-    lr_reference_shape: torch.Size | tuple[int, ...] | None,
-    adjust_lr_fn: str | None,
     ns_coefficients: tuple[float, float, float],
     ns_steps: int,
     eps: float,
 ) -> Tensor:
-    """Compute independent matrix directions with relative shape scaling."""
-    reference_ratio = (
-        None
-        if lr_reference_shape is None
-        else _adjust_muon_learning_rate(1.0, adjust_lr_fn, lr_reference_shape)
-    )
+    """Replace each matrix batch of ``prepared`` with its Muon direction."""
     for view in matrix_views:
         matrices = view.view_as_matrix_batch(prepared)
         matrices.copy_(
@@ -1886,12 +1874,6 @@ def _compute_muon_direction(
                 eps=eps,
             )
         )
-        if reference_ratio is None:
-            continue
-        ratio = _adjust_muon_learning_rate(1.0, adjust_lr_fn, matrices.shape[-2:])
-        # Preserve the original update arithmetic when the shape factors match.
-        if ratio != reference_ratio:
-            matrices.mul_(ratio / reference_ratio)
     return prepared
 
 
@@ -1981,7 +1963,10 @@ def _zeropower_via_newtonschulz(
 ) -> Tensor:
     """Compute Muon's approximate polar factor without optimizer state."""
     a, b, c = ns_coefficients
-    result = update.to(dtype=torch.bfloat16, copy=True)
+    if update.dtype == torch.bfloat16 and update.is_contiguous():
+        result = update
+    else:
+        result = update.to(dtype=torch.bfloat16, copy=True)
     transposed = result.shape[-2] > result.shape[-1]
     if transposed:
         result = result.transpose(-2, -1)
