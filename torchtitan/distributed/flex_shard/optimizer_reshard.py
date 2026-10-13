@@ -159,8 +159,8 @@ class ComputeLayout:
     axes in storage-mesh order. Each named axis must declare ``Shard`` on that
     same tensor dimension, written as a non-negative index.
 
-    ``compute_dtype`` is the dtype the optimizer computes in for parameters
-    that are redistributed; ``None`` keeps the storage dtype.
+    ``compute_dtype`` is the dtype the optimizer computes in; ``None`` keeps
+    the storage dtype.
 
     Examples:
         Shard a logical batch of matrices over EP first, then split each
