@@ -1,0 +1,4498 @@
+[
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 2875574,
+    "duration_ns": 2869520,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 6120225,
+    "duration_ns": 2566353,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 9134893,
+    "duration_ns": 1305882,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 11323999,
+    "duration_ns": 87364549,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 99496828,
+    "duration_ns": 87367300,
+    "fqn": "layers.0.feed_forward.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 187297468,
+    "duration_ns": 894332,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 188286101,
+    "duration_ns": 840860,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 189315886,
+    "duration_ns": 1371513,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 190738405,
+    "duration_ns": 496574,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 191292609,
+    "duration_ns": 539167,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 191904221,
+    "duration_ns": 4188615,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 196176865,
+    "duration_ns": 541631,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 196744893,
+    "duration_ns": 149250,
+    "fqn": "layers.2.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 196956892,
+    "duration_ns": 4186983,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 202353977,
+    "duration_ns": 13801799,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 217545173,
+    "duration_ns": 6937460,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 225948446,
+    "duration_ns": 13330474,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 240667101,
+    "duration_ns": 6937589,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 1974850,
+    "duration_ns": 2494935,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 4752758,
+    "duration_ns": 2499128,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 7494379,
+    "duration_ns": 1282268,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 9255843,
+    "duration_ns": 44634535,
+    "fqn": "layers.0.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 54486661,
+    "duration_ns": 88542926,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 143457840,
+    "duration_ns": 828446,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 144353804,
+    "duration_ns": 545888,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 144944361,
+    "duration_ns": 402273,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 145397832,
+    "duration_ns": 494015,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 145924389,
+    "duration_ns": 201473,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 146140164,
+    "duration_ns": 142882,
+    "fqn": "layers.1.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 146346788,
+    "duration_ns": 4174256,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 150580210,
+    "duration_ns": 202401,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 150844432,
+    "duration_ns": 4172625,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 191928452,
+    "duration_ns": 14045543,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 207422787,
+    "duration_ns": 6825413,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 215719648,
+    "duration_ns": 13127051,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 230240451,
+    "duration_ns": 6806629,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 2187516,
+    "duration_ns": 2865773,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 5386181,
+    "duration_ns": 2502256,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 8323727,
+    "duration_ns": 2071667,
+    "fqn": "layers.0.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 12325938,
+    "duration_ns": 2455184,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 15040223,
+    "duration_ns": 2395888,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 17702891,
+    "duration_ns": 2374257,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 20329336,
+    "duration_ns": 2442512,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 23188643,
+    "duration_ns": 2244466,
+    "fqn": "layers.2.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 191759030,
+    "duration_ns": 13571967,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 206761800,
+    "duration_ns": 6787377,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 215021356,
+    "duration_ns": 13004611,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 229422083,
+    "duration_ns": 6718002,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 1968374,
+    "duration_ns": 2466808,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 4722123,
+    "duration_ns": 2473176,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 10161013,
+    "duration_ns": 2390935,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 12810409,
+    "duration_ns": 2372217,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 15431743,
+    "duration_ns": 2335704,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 18092020,
+    "duration_ns": 2329464,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 23024320,
+    "duration_ns": 51639501,
+    "fqn": "layers.1.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 191960009,
+    "duration_ns": 13630634,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 207005515,
+    "duration_ns": 6758566,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 215235690,
+    "duration_ns": 13050188,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 229676974,
+    "duration_ns": 6753766,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 1946091,
+    "duration_ns": 2446361,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 4683488,
+    "duration_ns": 2419961,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 10067789,
+    "duration_ns": 2385464,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 12712163,
+    "duration_ns": 2346777,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 15317817,
+    "duration_ns": 2272793,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 17930991,
+    "duration_ns": 2314713,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 23027324,
+    "duration_ns": 51449122,
+    "fqn": "layers.2.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 191924229,
+    "duration_ns": 13610191,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 206949325,
+    "duration_ns": 6760969,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 215182222,
+    "duration_ns": 12995090,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 229568697,
+    "duration_ns": 6706697,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 1768545,
+    "duration_ns": 2429197,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 4491850,
+    "duration_ns": 2387693,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 9794428,
+    "duration_ns": 2338158,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 12388134,
+    "duration_ns": 2287375,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 14929584,
+    "duration_ns": 2262383,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 17515898,
+    "duration_ns": 2290030,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 22496463,
+    "duration_ns": 3614820,
+    "fqn": "layers.1.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 191890982,
+    "duration_ns": 13554349,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 206858917,
+    "duration_ns": 6746792,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 215074815,
+    "duration_ns": 12992819,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 229465828,
+    "duration_ns": 6704456,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 2021331,
+    "duration_ns": 2511571,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 4827971,
+    "duration_ns": 2445012,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 10262116,
+    "duration_ns": 2376852,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 12897588,
+    "duration_ns": 2347445,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 15507141,
+    "duration_ns": 2333973,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 18162038,
+    "duration_ns": 2335317,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 22505629,
+    "duration_ns": 3626701,
+    "fqn": "layers.2.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 191871155,
+    "duration_ns": 13574420,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 206861117,
+    "duration_ns": 6763227,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 215095758,
+    "duration_ns": 13032087,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 229521371,
+    "duration_ns": 6762235,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 1831706,
+    "duration_ns": 2435596,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 4541474,
+    "duration_ns": 2375404,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 9892114,
+    "duration_ns": 2331437,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 12475227,
+    "duration_ns": 2307277,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 15030021,
+    "duration_ns": 2308269,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 17587630,
+    "duration_ns": 2265773,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 22451010,
+    "duration_ns": 2097392,
+    "fqn": "layers.1.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 191906210,
+    "duration_ns": 13525194,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 206844765,
+    "duration_ns": 6769446,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 215083476,
+    "duration_ns": 13000910,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 229480596,
+    "duration_ns": 6726342,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 2096993,
+    "duration_ns": 2657841,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 5053006,
+    "duration_ns": 2614802,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 8406969,
+    "duration_ns": 87657780,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 96496296,
+    "duration_ns": 920892,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 97638049,
+    "duration_ns": 1442392,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 99126391,
+    "duration_ns": 410207,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 99587924,
+    "duration_ns": 500895,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 100145457,
+    "duration_ns": 543646,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 100761037,
+    "duration_ns": 4181703,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 106138058,
+    "duration_ns": 13862506,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 121388521,
+    "duration_ns": 6998614,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 129853043,
+    "duration_ns": 13474989,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 144715637,
+    "duration_ns": 7002421,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 1870416,
+    "duration_ns": 2590200,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 4755141,
+    "duration_ns": 2446392,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 7932120,
+    "duration_ns": 86004591,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 94377187,
+    "duration_ns": 793247,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 95223519,
+    "duration_ns": 504800,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 95774717,
+    "duration_ns": 413953,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 96240347,
+    "duration_ns": 504352,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 96777018,
+    "duration_ns": 205761,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 96997113,
+    "duration_ns": 146241,
+    "fqn": "layers.1.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 97215352,
+    "duration_ns": 5175981,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 103568223,
+    "duration_ns": 14000458,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 118958434,
+    "duration_ns": 7005350,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 127428864,
+    "duration_ns": 13396685,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 142217702,
+    "duration_ns": 6959143,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 2066648,
+    "duration_ns": 2811695,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 5185955,
+    "duration_ns": 2717903,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 8650443,
+    "duration_ns": 80780801,
+    "fqn": "layers.0.feed_forward.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 89864231,
+    "duration_ns": 690526,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 90602882,
+    "duration_ns": 462079,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 91108063,
+    "duration_ns": 368127,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 91525244,
+    "duration_ns": 459103,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 92016056,
+    "duration_ns": 181793,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 92210423,
+    "duration_ns": 128257,
+    "fqn": "layers.2.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 92402486,
+    "duration_ns": 3655977,
+    "fqn": "layers.2.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 100448319,
+    "duration_ns": 14110499,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 115950583,
+    "duration_ns": 6878675,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 124297982,
+    "duration_ns": 13214825,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 138904988,
+    "duration_ns": 6829140,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 2394043,
+    "duration_ns": 2648600,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 5375567,
+    "duration_ns": 2485369,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 8380867,
+    "duration_ns": 44196952,
+    "fqn": "layers.0.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 52798040,
+    "duration_ns": 568512,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 53414837,
+    "duration_ns": 488385,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 53947796,
+    "duration_ns": 396640,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 54394642,
+    "duration_ns": 486784,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 54938512,
+    "duration_ns": 527232,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 55538477,
+    "duration_ns": 3813716,
+    "fqn": "layers.1.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 100514752,
+    "duration_ns": 13770221,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 115676389,
+    "duration_ns": 6755272,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 123903525,
+    "duration_ns": 13081200,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 138380110,
+    "duration_ns": 6766119,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 2152338,
+    "duration_ns": 2541401,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 4998280,
+    "duration_ns": 2482457,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 7893661,
+    "duration_ns": 2029595,
+    "fqn": "layers.0.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 11848271,
+    "duration_ns": 2347033,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 14452069,
+    "duration_ns": 2293081,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 16999963,
+    "duration_ns": 2354841,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 19605394,
+    "duration_ns": 2302713,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 22315815,
+    "duration_ns": 4384498,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 26798263,
+    "duration_ns": 2315641,
+    "fqn": "layers.2.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 100606980,
+    "duration_ns": 13668687,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 115667340,
+    "duration_ns": 6712968,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 123851725,
+    "duration_ns": 12990194,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 138234967,
+    "duration_ns": 6700554,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 2096138,
+    "duration_ns": 2657644,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 5059729,
+    "duration_ns": 3206919,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 8759250,
+    "duration_ns": 1313975,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 13395243,
+    "duration_ns": 2364302,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 16018582,
+    "duration_ns": 2360078,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 18627263,
+    "duration_ns": 2369135,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 21243562,
+    "duration_ns": 2389198,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 24029042,
+    "duration_ns": 2383950,
+    "fqn": "layers.1.attention.wq_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 26509598,
+    "duration_ns": 4362813,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 100587504,
+    "duration_ns": 13703536,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 115686994,
+    "duration_ns": 6719754,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 123879086,
+    "duration_ns": 12993236,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 138266325,
+    "duration_ns": 6856232,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 1877731,
+    "duration_ns": 3381745,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 5633104,
+    "duration_ns": 2479317,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 8359617,
+    "duration_ns": 1260636,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 12657643,
+    "duration_ns": 2388469,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 15296669,
+    "duration_ns": 2348566,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 17894896,
+    "duration_ns": 2374773,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 20510882,
+    "duration_ns": 2369493,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 23400723,
+    "duration_ns": 57787603,
+    "fqn": "layers.2.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 100605310,
+    "duration_ns": 13761338,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 115760687,
+    "duration_ns": 6774399,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 124002628,
+    "duration_ns": 13046109,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 138441081,
+    "duration_ns": 6899069,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 2020671,
+    "duration_ns": 2555756,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 4872006,
+    "duration_ns": 2527052,
+    "fqn": "layers.0.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 10499317,
+    "duration_ns": 2418574,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 13166814,
+    "duration_ns": 2386797,
+    "fqn": "layers.1.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 15798279,
+    "duration_ns": 2406254,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 18458640,
+    "duration_ns": 2319086,
+    "fqn": "layers.2.attention.wq_b.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 21272472,
+    "duration_ns": 58019435,
+    "fqn": "layers.1.attention.wo.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 100523592,
+    "duration_ns": 13751755,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 115669829,
+    "duration_ns": 6767143,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 123906974,
+    "duration_ns": 13083312,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 138381152,
+    "duration_ns": 6896486,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 2670435,
+    "duration_ns": 2947693,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 6025899,
+    "duration_ns": 2615663,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 9072117,
+    "duration_ns": 1322392,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 10959432,
+    "duration_ns": 5339611,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 16456192,
+    "duration_ns": 4707360,
+    "fqn": "layers.0.feed_forward.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 21258269,
+    "duration_ns": 599166,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 21881273,
+    "duration_ns": 387231,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 22290230,
+    "duration_ns": 2233938,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 24775108,
+    "duration_ns": 2550031,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 27724431,
+    "duration_ns": 1174937,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 29425123,
+    "duration_ns": 2225489,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 31695922,
+    "duration_ns": 778749,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 33011689,
+    "duration_ns": 2213426,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 36094706,
+    "duration_ns": 8622276,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 45843948,
+    "duration_ns": 4558498,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 51564163,
+    "duration_ns": 8457829,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 61120862,
+    "duration_ns": 4579777,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 66053051,
+    "duration_ns": 331615,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 66409304,
+    "duration_ns": 399135,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 66830421,
+    "duration_ns": 329216,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 67184051,
+    "duration_ns": 398879,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 67619951,
+    "duration_ns": 263329,
+    "fqn": "layers.3.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 67928461,
+    "duration_ns": 2130227,
+    "fqn": "layers.3.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 70105214,
+    "duration_ns": 265184,
+    "fqn": "layers.4.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 70416827,
+    "duration_ns": 2127155,
+    "fqn": "layers.4.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 73444518,
+    "duration_ns": 8725123,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 83266079,
+    "duration_ns": 4647744,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 89069749,
+    "duration_ns": 8671396,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "relative_ns": 98838575,
+    "duration_ns": 4646144,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 1878619,
+    "duration_ns": 2584599,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 4759215,
+    "duration_ns": 2440054,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 7437955,
+    "duration_ns": 1231388,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 9037051,
+    "duration_ns": 1831258,
+    "fqn": "layers.0.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 10964947,
+    "duration_ns": 5327754,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 16381371,
+    "duration_ns": 325664,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 16888408,
+    "duration_ns": 2410039,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 19551244,
+    "duration_ns": 2340696,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 22167937,
+    "duration_ns": 2454326,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 24861300,
+    "duration_ns": 1187645,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 26459310,
+    "duration_ns": 2219736,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 28706307,
+    "duration_ns": 552128,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 29624031,
+    "duration_ns": 2213272,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 32677138,
+    "duration_ns": 8703803,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 42484390,
+    "duration_ns": 4799788,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 48443499,
+    "duration_ns": 8529980,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 58074720,
+    "duration_ns": 4545902,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 62974538,
+    "duration_ns": 325633,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 63325641,
+    "duration_ns": 394432,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 63743079,
+    "duration_ns": 323361,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 64091685,
+    "duration_ns": 393152,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 64501572,
+    "duration_ns": 170369,
+    "fqn": "layers.3.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 64704771,
+    "duration_ns": 1709946,
+    "fqn": "layers.3.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 66460155,
+    "duration_ns": 2067897,
+    "fqn": "layers.3.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 68554386,
+    "duration_ns": 172352,
+    "fqn": "layers.4.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 68760624,
+    "duration_ns": 2068889,
+    "fqn": "layers.4.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 71743587,
+    "duration_ns": 8752187,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 81597399,
+    "duration_ns": 4548206,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 87307069,
+    "duration_ns": 8531036,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "relative_ns": 96938003,
+    "duration_ns": 4551853,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 1829378,
+    "duration_ns": 2566767,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 4689198,
+    "duration_ns": 2436080,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 9697801,
+    "duration_ns": 2362705,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 12314518,
+    "duration_ns": 2320306,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 14885188,
+    "duration_ns": 2318289,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 17452785,
+    "duration_ns": 2391377,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 20304957,
+    "duration_ns": 2030995,
+    "fqn": "layers.1.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 23858883,
+    "duration_ns": 8638372,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 33600829,
+    "duration_ns": 4754175,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 39514258,
+    "duration_ns": 8756899,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 49369291,
+    "duration_ns": 4581953,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 54302183,
+    "duration_ns": 320352,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 54647428,
+    "duration_ns": 388224,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 55057570,
+    "duration_ns": 318815,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 55400383,
+    "duration_ns": 387647,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 55810652,
+    "duration_ns": 130913,
+    "fqn": "layers.4.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 56771157,
+    "duration_ns": 9956634,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 67828997,
+    "duration_ns": 5124318,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 74114424,
+    "duration_ns": 8692739,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "relative_ns": 83904337,
+    "duration_ns": 4581761,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 1876799,
+    "duration_ns": 2598103,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 4776083,
+    "duration_ns": 2479897,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 9817088,
+    "duration_ns": 2446361,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 12516886,
+    "duration_ns": 2446616,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 15214155,
+    "duration_ns": 2352153,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 17815170,
+    "duration_ns": 2466968,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 20679446,
+    "duration_ns": 2072922,
+    "fqn": "layers.2.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 23834666,
+    "duration_ns": 8883808,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 33822980,
+    "duration_ns": 5435629,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 40423307,
+    "duration_ns": 9242014,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 50762915,
+    "duration_ns": 4541201,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 55656112,
+    "duration_ns": 326977,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 56007439,
+    "duration_ns": 397697,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 56427693,
+    "duration_ns": 326145,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 56778412,
+    "duration_ns": 394560,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 58023943,
+    "duration_ns": 9773949,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 68894622,
+    "duration_ns": 5039918,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 75113190,
+    "duration_ns": 8598081,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "relative_ns": 84807937,
+    "duration_ns": 4571888,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 1808874,
+    "duration_ns": 2524528,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 4625206,
+    "duration_ns": 2411857,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 9604147,
+    "duration_ns": 2354193,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 12235552,
+    "duration_ns": 2315826,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 14808462,
+    "duration_ns": 2308113,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 17368988,
+    "duration_ns": 2379280,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 20172552,
+    "duration_ns": 1853652,
+    "fqn": "layers.1.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 23847373,
+    "duration_ns": 8946050,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 33899461,
+    "duration_ns": 4840352,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 39908475,
+    "duration_ns": 8736483,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 49741268,
+    "duration_ns": 4531202,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 54624914,
+    "duration_ns": 319263,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 54968271,
+    "duration_ns": 386431,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 55376493,
+    "duration_ns": 318719,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 55719050,
+    "duration_ns": 387359,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 56148871,
+    "duration_ns": 1704086,
+    "fqn": "layers.4.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 58713333,
+    "duration_ns": 9673213,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 69485864,
+    "duration_ns": 4985566,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 75648028,
+    "duration_ns": 8521701,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "relative_ns": 85268855,
+    "duration_ns": 4533954,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 2456362,
+    "duration_ns": 2961961,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 5788878,
+    "duration_ns": 2648972,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 11169474,
+    "duration_ns": 2492237,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 13918347,
+    "duration_ns": 2480109,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 16665556,
+    "duration_ns": 2380142,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 19316510,
+    "duration_ns": 2550765,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 22279366,
+    "duration_ns": 1943954,
+    "fqn": "layers.2.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 25058511,
+    "duration_ns": 8563675,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 34723807,
+    "duration_ns": 4725371,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 40608910,
+    "duration_ns": 8721082,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 50425117,
+    "duration_ns": 4532701,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 55309461,
+    "duration_ns": 318431,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 55652210,
+    "duration_ns": 386239,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 56059950,
+    "duration_ns": 318112,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 56401579,
+    "duration_ns": 385151,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 56809352,
+    "duration_ns": 128129,
+    "fqn": "layers.3.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 57768512,
+    "duration_ns": 9671730,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 68543303,
+    "duration_ns": 4998553,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 74712500,
+    "duration_ns": 8528988,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "relative_ns": 84343428,
+    "duration_ns": 4548701,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 1792256,
+    "duration_ns": 2531251,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 4616047,
+    "duration_ns": 2372980,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 9531986,
+    "duration_ns": 2385812,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 12178722,
+    "duration_ns": 2345556,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 14773427,
+    "duration_ns": 2284117,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 17304388,
+    "duration_ns": 2347956,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 20049812,
+    "duration_ns": 750429,
+    "fqn": "layers.1.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 23861661,
+    "duration_ns": 8959629,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 33921506,
+    "duration_ns": 4864421,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 39955198,
+    "duration_ns": 8757454,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 49807939,
+    "duration_ns": 4545480,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 54705543,
+    "duration_ns": 317472,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 55047300,
+    "duration_ns": 390592,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 55460002,
+    "duration_ns": 317920,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 55802336,
+    "duration_ns": 388352,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 56236445,
+    "duration_ns": 1914135,
+    "fqn": "layers.3.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 59020781,
+    "duration_ns": 9680712,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 69803245,
+    "duration_ns": 4954949,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 75926824,
+    "duration_ns": 8533488,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "relative_ns": 85558096,
+    "duration_ns": 4628902,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 1935039,
+    "duration_ns": 2769066,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 5025348,
+    "duration_ns": 2526987,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 10259892,
+    "duration_ns": 2513324,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 13030011,
+    "duration_ns": 2418828,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 15715363,
+    "duration_ns": 2356813,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 18396587,
+    "duration_ns": 3072902,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 21909291,
+    "duration_ns": 824251,
+    "fqn": "layers.2.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 23914041,
+    "duration_ns": 8639796,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 33659361,
+    "duration_ns": 4853398,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 39677291,
+    "duration_ns": 8761939,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 49537266,
+    "duration_ns": 4540089,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 54431621,
+    "duration_ns": 320351,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 54776674,
+    "duration_ns": 387519,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 55186495,
+    "duration_ns": 319646,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 55530555,
+    "duration_ns": 389759,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 55966103,
+    "duration_ns": 1909553,
+    "fqn": "layers.4.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 58759550,
+    "duration_ns": 9658059,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 69524125,
+    "duration_ns": 4990197,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 75678341,
+    "duration_ns": 8567029,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "relative_ns": 85346574,
+    "duration_ns": 4540185,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 2515754,
+    "duration_ns": 2761102,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 5587572,
+    "duration_ns": 2543695,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 8615998,
+    "duration_ns": 5341242,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 14068949,
+    "duration_ns": 1307416,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 15630250,
+    "duration_ns": 2396176,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 18286454,
+    "duration_ns": 2388721,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 20926691,
+    "duration_ns": 2405520,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 23746190,
+    "duration_ns": 2025107,
+    "fqn": "layers.2.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 26608825,
+    "duration_ns": 8659810,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 36371953,
+    "duration_ns": 4680735,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 42212102,
+    "duration_ns": 8461315,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 51772255,
+    "duration_ns": 4561920,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 56685851,
+    "duration_ns": 329983,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 57040408,
+    "duration_ns": 401119,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 57464373,
+    "duration_ns": 329856,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 57819411,
+    "duration_ns": 400254,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 58236175,
+    "duration_ns": 172641,
+    "fqn": "layers.3.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 58437166,
+    "duration_ns": 262912,
+    "fqn": "layers.4.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 58743788,
+    "duration_ns": 1745205,
+    "fqn": "layers.4.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 60515135,
+    "duration_ns": 134049,
+    "fqn": "layers.4.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 61507127,
+    "duration_ns": 8713570,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 71316495,
+    "duration_ns": 4625024,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 77098756,
+    "duration_ns": 8678722,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "relative_ns": 86872572,
+    "duration_ns": 4656032,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 1825133,
+    "duration_ns": 2497303,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 4618656,
+    "duration_ns": 2373783,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 7406516,
+    "duration_ns": 5427209,
+    "fqn": "layers.0.feed_forward.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 12923770,
+    "duration_ns": 659807,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 13833270,
+    "duration_ns": 2281720,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 16362155,
+    "duration_ns": 2303991,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 18914079,
+    "duration_ns": 2292504,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 21589747,
+    "duration_ns": 1104829,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 23251019,
+    "duration_ns": 1819834,
+    "fqn": "layers.1.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 25097763,
+    "duration_ns": 133185,
+    "fqn": "layers.1.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 25508225,
+    "duration_ns": 1160668,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 27697495,
+    "duration_ns": 8658746,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 37494538,
+    "duration_ns": 4609101,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 43264464,
+    "duration_ns": 8531803,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 52896036,
+    "duration_ns": 4549261,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 57799501,
+    "duration_ns": 323521,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 58148396,
+    "duration_ns": 414368,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 58584906,
+    "duration_ns": 325344,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 58935432,
+    "duration_ns": 398816,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 59378662,
+    "duration_ns": 1935481,
+    "fqn": "layers.4.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 62189881,
+    "duration_ns": 8669595,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 71959917,
+    "duration_ns": 4578445,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 77699698,
+    "duration_ns": 8572059,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "relative_ns": 87369830,
+    "duration_ns": 4577613,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 2069002,
+    "duration_ns": 2800174,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 5230579,
+    "duration_ns": 2519279,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 8195933,
+    "duration_ns": 4876862,
+    "fqn": "layers.0.feed_forward.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 13161145,
+    "duration_ns": 1105178,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 14521167,
+    "duration_ns": 2398256,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 17195067,
+    "duration_ns": 2391921,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 19839400,
+    "duration_ns": 2404528,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 22478804,
+    "duration_ns": 1245593,
+    "fqn": "layers.1.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 24104296,
+    "duration_ns": 1257561,
+    "fqn": "layers.2.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 25872444,
+    "duration_ns": 1818388,
+    "fqn": "layers.2.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 27718478,
+    "duration_ns": 129697,
+    "fqn": "layers.2.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 28960005,
+    "duration_ns": 8621827,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 38696349,
+    "duration_ns": 4593377,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 44448723,
+    "duration_ns": 8494852,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 54041005,
+    "duration_ns": 4536704,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 58930729,
+    "duration_ns": 318111,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 59272967,
+    "duration_ns": 382782,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 59677252,
+    "duration_ns": 316831,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 60017825,
+    "duration_ns": 384319,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 60439038,
+    "duration_ns": 255680,
+    "fqn": "layers.3.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 60738300,
+    "duration_ns": 1707477,
+    "fqn": "layers.3.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 62472047,
+    "duration_ns": 129697,
+    "fqn": "layers.3.feed_forward.router.gate.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 62612398,
+    "duration_ns": 164513,
+    "fqn": "layers.4.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 63634086,
+    "duration_ns": 8552644,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 73285151,
+    "duration_ns": 4540001,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 78983958,
+    "duration_ns": 8496259,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "relative_ns": 88576911,
+    "duration_ns": 4602624,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 1818891,
+    "duration_ns": 2562104,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 4678560,
+    "duration_ns": 2431896,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 7522325,
+    "duration_ns": 1846714,
+    "fqn": "layers.0.attention.wo.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 10929799,
+    "duration_ns": 2370233,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 13553053,
+    "duration_ns": 2346617,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 16156243,
+    "duration_ns": 2361816,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 18774345,
+    "duration_ns": 2337336,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 21512350,
+    "duration_ns": 2217497,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 24566162,
+    "duration_ns": 8668895,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 34342155,
+    "duration_ns": 4776879,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 40279796,
+    "duration_ns": 8486881,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 49865230,
+    "duration_ns": 4533040,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 54751579,
+    "duration_ns": 325057,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 55101690,
+    "duration_ns": 395616,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 55519672,
+    "duration_ns": 326208,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 55870487,
+    "duration_ns": 394080,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 56307893,
+    "duration_ns": 2075930,
+    "fqn": "layers.4.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 59263497,
+    "duration_ns": 9018847,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 69383265,
+    "duration_ns": 4550609,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 75092587,
+    "duration_ns": 8538080,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "relative_ns": 84729509,
+    "duration_ns": 4592400,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 1767859,
+    "duration_ns": 2453626,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 4509513,
+    "duration_ns": 2387802,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 7302656,
+    "duration_ns": 1154942,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 11243058,
+    "duration_ns": 2260858,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 13760681,
+    "duration_ns": 2303898,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 16314112,
+    "duration_ns": 2314330,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 18877143,
+    "duration_ns": 2320698,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 21600110,
+    "duration_ns": 2220378,
+    "fqn": "layers.2.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 24658307,
+    "duration_ns": 8743331,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 34512000,
+    "duration_ns": 4793170,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 40465803,
+    "duration_ns": 8472741,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 50036938,
+    "duration_ns": 4532914,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 54922361,
+    "duration_ns": 323905,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 55270615,
+    "duration_ns": 391265,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 55684502,
+    "duration_ns": 323553,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 56032341,
+    "duration_ns": 390880,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 56467795,
+    "duration_ns": 2067131,
+    "fqn": "layers.4.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 59415241,
+    "duration_ns": 8958850,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 69473029,
+    "duration_ns": 4532850,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 75165810,
+    "duration_ns": 8474564,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "relative_ns": 84741296,
+    "duration_ns": 4532498,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 1821641,
+    "duration_ns": 2531822,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 4646066,
+    "duration_ns": 2417359,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 7303101,
+    "duration_ns": 1222520,
+    "fqn": "layers.0.attention.wkv_a.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 11074079,
+    "duration_ns": 2349039,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 13672074,
+    "duration_ns": 2309615,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 16231541,
+    "duration_ns": 2321200,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 18803329,
+    "duration_ns": 2304591,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 21504587,
+    "duration_ns": 2027538,
+    "fqn": "layers.1.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 24373812,
+    "duration_ns": 8921211,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 34406596,
+    "duration_ns": 4788123,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 40354612,
+    "duration_ns": 8502430,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 49958727,
+    "duration_ns": 4549437,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 54861472,
+    "duration_ns": 324031,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 55210685,
+    "duration_ns": 392863,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 55625561,
+    "duration_ns": 323296,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 55973143,
+    "duration_ns": 391199,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 56408659,
+    "duration_ns": 1911187,
+    "fqn": "layers.3.feed_forward.shared_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 59189885,
+    "duration_ns": 8811707,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 69101870,
+    "duration_ns": 4534365,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 74794720,
+    "duration_ns": 8586365,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "relative_ns": 84478802,
+    "duration_ns": 4618781,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 1944951,
+    "duration_ns": 2593171,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 4863207,
+    "duration_ns": 2399219,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 9869802,
+    "duration_ns": 2281813,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 12408443,
+    "duration_ns": 2313525,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 14989964,
+    "duration_ns": 2246710,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 17490014,
+    "duration_ns": 2384789,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 20276686,
+    "duration_ns": 2236886,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 23350781,
+    "duration_ns": 8904783,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 33355780,
+    "duration_ns": 4904198,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 39430273,
+    "duration_ns": 8525169,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 49055914,
+    "duration_ns": 4546856,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 53954030,
+    "duration_ns": 318592,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 54297772,
+    "duration_ns": 388671,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 54708073,
+    "duration_ns": 317569,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 55050440,
+    "duration_ns": 386399,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 55482053,
+    "duration_ns": 2068151,
+    "fqn": "layers.3.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 58414357,
+    "duration_ns": 9019694,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 68532123,
+    "duration_ns": 4544135,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 74233978,
+    "duration_ns": 8501394,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "relative_ns": 83835779,
+    "duration_ns": 4658088,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 1896177,
+    "duration_ns": 2625707,
+    "fqn": "layers.0.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 4825783,
+    "duration_ns": 2439404,
+    "fqn": "layers.0.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 9988105,
+    "duration_ns": 2357036,
+    "fqn": "layers.1.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 12600882,
+    "duration_ns": 2360364,
+    "fqn": "layers.1.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 15197178,
+    "duration_ns": 2316558,
+    "fqn": "layers.2.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 17824067,
+    "duration_ns": 2312109,
+    "fqn": "layers.2.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 20570730,
+    "duration_ns": 2238062,
+    "fqn": "layers.1.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 23649519,
+    "duration_ns": 8658420,
+    "fqn": "layers.1.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 33407096,
+    "duration_ns": 4869526,
+    "fqn": "layers.1.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 39460737,
+    "duration_ns": 8540470,
+    "fqn": "layers.2.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 49099115,
+    "duration_ns": 4541178,
+    "fqn": "layers.2.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 53992352,
+    "duration_ns": 316863,
+    "fqn": "layers.3.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 54333661,
+    "duration_ns": 384254,
+    "fqn": "layers.3.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 54740153,
+    "duration_ns": 315807,
+    "fqn": "layers.4.attention.wkv_b.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 55080022,
+    "duration_ns": 384926,
+    "fqn": "layers.4.attention.wq.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 55509842,
+    "duration_ns": 2066576,
+    "fqn": "layers.3.feed_forward.shared_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 58444152,
+    "duration_ns": 9233903,
+    "fqn": "layers.3.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 68778460,
+    "duration_ns": 4540505,
+    "fqn": "layers.3.feed_forward.routed_experts.w2.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 74477065,
+    "duration_ns": 8511030,
+    "fqn": "layers.4.feed_forward.routed_experts.w13.weight"
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "relative_ns": 84086195,
+    "duration_ns": 4539097,
+    "fqn": "layers.4.feed_forward.routed_experts.w2.weight"
+  }
+]

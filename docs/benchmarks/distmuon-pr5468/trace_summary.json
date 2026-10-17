@@ -1,0 +1,866 @@
+[
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 0,
+    "window_ms": 248.259499,
+    "busy_union_ms": 240.793678,
+    "num_events": 906.0,
+    "unique_events": 906.0,
+    "families": {
+      "Copy": {
+        "num_events": 256,
+        "sum_ms": 7.789119
+      },
+      "GEMM": {
+        "num_events": 360,
+        "sum_ms": 213.477711
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 5.542748
+      },
+      "Pointwise/other": {
+        "num_events": 286,
+        "sum_ms": 20.073275
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 1,
+    "window_ms": 237.507451,
+    "busy_union_ms": 232.511365,
+    "num_events": 906.0,
+    "unique_events": 906.0,
+    "families": {
+      "Copy": {
+        "num_events": 262,
+        "sum_ms": 7.388385
+      },
+      "GEMM": {
+        "num_events": 360,
+        "sum_ms": 171.787023
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 63.935859
+      },
+      "Pointwise/other": {
+        "num_events": 280,
+        "sum_ms": 18.764109
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 2,
+    "window_ms": 236.59149,
+    "busy_union_ms": 231.63384,
+    "num_events": 689.0,
+    "unique_events": 689.0,
+    "families": {
+      "Copy": {
+        "num_events": 181,
+        "sum_ms": 3.388874
+      },
+      "GEMM": {
+        "num_events": 270,
+        "sum_ms": 38.681493
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 191.910888
+      },
+      "Pointwise/other": {
+        "num_events": 234,
+        "sum_ms": 15.097145
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 3,
+    "window_ms": 236.884224,
+    "busy_union_ms": 232.60253,
+    "num_events": 656.0,
+    "unique_events": 656.0,
+    "families": {
+      "Copy": {
+        "num_events": 168,
+        "sum_ms": 3.566616
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 85.875458
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 194.574818
+      },
+      "Pointwise/other": {
+        "num_events": 229,
+        "sum_ms": 15.325534
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 4,
+    "window_ms": 236.744314,
+    "busy_union_ms": 232.549724,
+    "num_events": 656.0,
+    "unique_events": 656.0,
+    "families": {
+      "Copy": {
+        "num_events": 168,
+        "sum_ms": 3.586958
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 85.504645
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 194.701447
+      },
+      "Pointwise/other": {
+        "num_events": 229,
+        "sum_ms": 15.347142
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 5,
+    "window_ms": 236.617839,
+    "busy_union_ms": 232.696666,
+    "num_events": 662.0,
+    "unique_events": 662.0,
+    "families": {
+      "Copy": {
+        "num_events": 172,
+        "sum_ms": 3.284548
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 38.106198
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 194.999996
+      },
+      "Pointwise/other": {
+        "num_events": 231,
+        "sum_ms": 14.814475
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 6,
+    "window_ms": 236.729907,
+    "busy_union_ms": 232.103504,
+    "num_events": 662.0,
+    "unique_events": 662.0,
+    "families": {
+      "Copy": {
+        "num_events": 172,
+        "sum_ms": 3.309609
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 38.163166
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 194.091623
+      },
+      "Pointwise/other": {
+        "num_events": 231,
+        "sum_ms": 14.717538
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "base",
+    "rank": 7,
+    "window_ms": 236.653846,
+    "busy_union_ms": 232.468717,
+    "num_events": 661.0,
+    "unique_events": 661.0,
+    "families": {
+      "Copy": {
+        "num_events": 173,
+        "sum_ms": 3.318628
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 36.71414
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 194.574624
+      },
+      "Pointwise/other": {
+        "num_events": 229,
+        "sum_ms": 14.657118
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 0,
+    "window_ms": 152.180721,
+    "busy_union_ms": 146.554539,
+    "num_events": 742.0,
+    "unique_events": 742.0,
+    "families": {
+      "Copy": {
+        "num_events": 207,
+        "sum_ms": 6.494452
+      },
+      "GEMM": {
+        "num_events": 285,
+        "sum_ms": 123.827358
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 4.081221
+      },
+      "Pointwise/other": {
+        "num_events": 246,
+        "sum_ms": 17.686255
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 1,
+    "window_ms": 149.622551,
+    "busy_union_ms": 145.436068,
+    "num_events": 769.0,
+    "unique_events": 769.0,
+    "families": {
+      "Copy": {
+        "num_events": 211,
+        "sum_ms": 6.513917
+      },
+      "GEMM": {
+        "num_events": 300,
+        "sum_ms": 122.489186
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 11.739346
+      },
+      "Pointwise/other": {
+        "num_events": 254,
+        "sum_ms": 17.678426
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 2,
+    "window_ms": 146.209532,
+    "busy_union_ms": 141.259173,
+    "num_events": 750.0,
+    "unique_events": 750.0,
+    "families": {
+      "Copy": {
+        "num_events": 192,
+        "sum_ms": 4.22307
+      },
+      "GEMM": {
+        "num_events": 300,
+        "sum_ms": 118.639749
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 18.386691
+      },
+      "Pointwise/other": {
+        "num_events": 254,
+        "sum_ms": 16.599386
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 3,
+    "window_ms": 145.592135,
+    "busy_union_ms": 140.017025,
+    "num_events": 723.0,
+    "unique_events": 723.0,
+    "families": {
+      "Copy": {
+        "num_events": 188,
+        "sum_ms": 3.736367
+      },
+      "GEMM": {
+        "num_events": 285,
+        "sum_ms": 82.503016
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 53.448978
+      },
+      "Pointwise/other": {
+        "num_events": 246,
+        "sum_ms": 15.689699
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 4,
+    "window_ms": 145.386233,
+    "busy_union_ms": 139.912721,
+    "num_events": 727.0,
+    "unique_events": 727.0,
+    "families": {
+      "Copy": {
+        "num_events": 199,
+        "sum_ms": 3.724856
+      },
+      "GEMM": {
+        "num_events": 285,
+        "sum_ms": 42.805727
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 95.522651
+      },
+      "Pointwise/other": {
+        "num_events": 239,
+        "sum_ms": 14.969963
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 5,
+    "window_ms": 145.572027,
+    "busy_union_ms": 137.475847,
+    "num_events": 737.0,
+    "unique_events": 737.0,
+    "families": {
+      "Copy": {
+        "num_events": 204,
+        "sum_ms": 3.690759
+      },
+      "GEMM": {
+        "num_events": 285,
+        "sum_ms": 41.489759
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 94.008396
+      },
+      "Pointwise/other": {
+        "num_events": 244,
+        "sum_ms": 14.740735
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 6,
+    "window_ms": 145.791535,
+    "busy_union_ms": 138.114819,
+    "num_events": 694.0,
+    "unique_events": 694.0,
+    "families": {
+      "Copy": {
+        "num_events": 183,
+        "sum_ms": 3.678187
+      },
+      "GEMM": {
+        "num_events": 270,
+        "sum_ms": 92.347096
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 94.77656
+      },
+      "Pointwise/other": {
+        "num_events": 237,
+        "sum_ms": 15.275816
+      }
+    }
+  },
+  {
+    "workload": "k25_slice",
+    "variant": "pr",
+    "rank": 7,
+    "window_ms": 145.72389,
+    "busy_union_ms": 139.983738,
+    "num_events": 656.0,
+    "unique_events": 656.0,
+    "families": {
+      "Copy": {
+        "num_events": 168,
+        "sum_ms": 3.67052
+      },
+      "GEMM": {
+        "num_events": 255,
+        "sum_ms": 92.618484
+      },
+      "NCCL": {
+        "num_events": 4,
+        "sum_ms": 96.697978
+      },
+      "Pointwise/other": {
+        "num_events": 229,
+        "sum_ms": 15.204667
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 0,
+    "window_ms": 103.840093,
+    "busy_union_ms": 85.722755,
+    "num_events": 1443.0,
+    "unique_events": 1443.0,
+    "families": {
+      "Copy": {
+        "num_events": 427,
+        "sum_ms": 7.983246
+      },
+      "GEMM": {
+        "num_events": 585,
+        "sum_ms": 60.17359
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 1.754195
+      },
+      "Pointwise/other": {
+        "num_events": 425,
+        "sum_ms": 18.552561
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 1,
+    "window_ms": 101.846951,
+    "busy_union_ms": 90.545776,
+    "num_events": 1486.0,
+    "unique_events": 1486.0,
+    "families": {
+      "Copy": {
+        "num_events": 435,
+        "sum_ms": 7.854332
+      },
+      "GEMM": {
+        "num_events": 600,
+        "sum_ms": 58.542111
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 20.883331
+      },
+      "Pointwise/other": {
+        "num_events": 445,
+        "sum_ms": 17.935979
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 2,
+    "window_ms": 88.840425,
+    "busy_union_ms": 80.695216,
+    "num_events": 1131.0,
+    "unique_events": 1131.0,
+    "families": {
+      "Copy": {
+        "num_events": 300,
+        "sum_ms": 6.809704
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 46.763218
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 47.806886
+      },
+      "Pointwise/other": {
+        "num_events": 375,
+        "sum_ms": 16.799103
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 3,
+    "window_ms": 89.732943,
+    "busy_union_ms": 81.482475,
+    "num_events": 1103.0,
+    "unique_events": 1103.0,
+    "families": {
+      "Copy": {
+        "num_events": 297,
+        "sum_ms": 6.806086
+      },
+      "GEMM": {
+        "num_events": 435,
+        "sum_ms": 47.779511
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 46.38443
+      },
+      "Pointwise/other": {
+        "num_events": 365,
+        "sum_ms": 16.726842
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 4,
+    "window_ms": 90.157582,
+    "busy_union_ms": 82.125964,
+    "num_events": 1126.0,
+    "unique_events": 1126.0,
+    "families": {
+      "Copy": {
+        "num_events": 300,
+        "sum_ms": 6.813517
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 47.910965
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 46.810513
+      },
+      "Pointwise/other": {
+        "num_events": 370,
+        "sum_ms": 16.75168
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 5,
+    "window_ms": 89.245779,
+    "busy_union_ms": 79.767662,
+    "num_events": 1131.0,
+    "unique_events": 1131.0,
+    "families": {
+      "Copy": {
+        "num_events": 300,
+        "sum_ms": 6.772354
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 45.934474
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 42.873757
+      },
+      "Pointwise/other": {
+        "num_events": 375,
+        "sum_ms": 16.924981
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 6,
+    "window_ms": 90.541764,
+    "busy_union_ms": 82.560917,
+    "num_events": 1131.0,
+    "unique_events": 1131.0,
+    "families": {
+      "Copy": {
+        "num_events": 300,
+        "sum_ms": 6.802646
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 46.668045
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 46.400333
+      },
+      "Pointwise/other": {
+        "num_events": 375,
+        "sum_ms": 16.641583
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "base",
+    "rank": 7,
+    "window_ms": 90.241958,
+    "busy_union_ms": 81.574728,
+    "num_events": 1131.0,
+    "unique_events": 1131.0,
+    "families": {
+      "Copy": {
+        "num_events": 300,
+        "sum_ms": 6.774434
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 46.355625
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 43.690965
+      },
+      "Pointwise/other": {
+        "num_events": 375,
+        "sum_ms": 17.281886
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 0,
+    "window_ms": 91.884248,
+    "busy_union_ms": 75.175953,
+    "num_events": 1263.0,
+    "unique_events": 1263.0,
+    "families": {
+      "Copy": {
+        "num_events": 347,
+        "sum_ms": 7.230056
+      },
+      "GEMM": {
+        "num_events": 510,
+        "sum_ms": 51.312047
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 6.035925
+      },
+      "Pointwise/other": {
+        "num_events": 400,
+        "sum_ms": 17.404019
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 1,
+    "window_ms": 92.304619,
+    "busy_union_ms": 77.59574,
+    "num_events": 1263.0,
+    "unique_events": 1263.0,
+    "families": {
+      "Copy": {
+        "num_events": 347,
+        "sum_ms": 7.29036
+      },
+      "GEMM": {
+        "num_events": 510,
+        "sum_ms": 51.146941
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 9.879701
+      },
+      "Pointwise/other": {
+        "num_events": 400,
+        "sum_ms": 17.409196
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 2,
+    "window_ms": 93.536346,
+    "busy_union_ms": 76.500463,
+    "num_events": 1352.0,
+    "unique_events": 1352.0,
+    "families": {
+      "Copy": {
+        "num_events": 370,
+        "sum_ms": 7.058219
+      },
+      "GEMM": {
+        "num_events": 555,
+        "sum_ms": 50.790893
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 4.954556
+      },
+      "Pointwise/other": {
+        "num_events": 421,
+        "sum_ms": 17.535068
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 3,
+    "window_ms": 89.681978,
+    "busy_union_ms": 77.035567,
+    "num_events": 1169.0,
+    "unique_events": 1169.0,
+    "families": {
+      "Copy": {
+        "num_events": 319,
+        "sum_ms": 7.015047
+      },
+      "GEMM": {
+        "num_events": 465,
+        "sum_ms": 48.48422
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 16.538208
+      },
+      "Pointwise/other": {
+        "num_events": 379,
+        "sum_ms": 16.91465
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 4,
+    "window_ms": 89.636394,
+    "busy_union_ms": 75.331276,
+    "num_events": 1179.0,
+    "unique_events": 1179.0,
+    "families": {
+      "Copy": {
+        "num_events": 329,
+        "sum_ms": 7.022183
+      },
+      "GEMM": {
+        "num_events": 465,
+        "sum_ms": 46.882253
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 16.796836
+      },
+      "Pointwise/other": {
+        "num_events": 379,
+        "sum_ms": 16.931437
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 5,
+    "window_ms": 89.452412,
+    "busy_union_ms": 74.170775,
+    "num_events": 1164.0,
+    "unique_events": 1164.0,
+    "families": {
+      "Copy": {
+        "num_events": 315,
+        "sum_ms": 6.853697
+      },
+      "GEMM": {
+        "num_events": 465,
+        "sum_ms": 47.001016
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 16.19123
+      },
+      "Pointwise/other": {
+        "num_events": 378,
+        "sum_ms": 16.750521
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 6,
+    "window_ms": 88.984913,
+    "busy_union_ms": 75.625203,
+    "num_events": 1146.0,
+    "unique_events": 1146.0,
+    "families": {
+      "Copy": {
+        "num_events": 316,
+        "sum_ms": 7.044719
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 47.113943
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 18.468021
+      },
+      "Pointwise/other": {
+        "num_events": 374,
+        "sum_ms": 17.028889
+      }
+    }
+  },
+  {
+    "workload": "moonlight_slice",
+    "variant": "pr",
+    "rank": 7,
+    "window_ms": 88.994542,
+    "busy_union_ms": 75.454126,
+    "num_events": 1146.0,
+    "unique_events": 1146.0,
+    "families": {
+      "Copy": {
+        "num_events": 316,
+        "sum_ms": 7.031382
+      },
+      "GEMM": {
+        "num_events": 450,
+        "sum_ms": 46.991836
+      },
+      "NCCL": {
+        "num_events": 6,
+        "sum_ms": 17.571106
+      },
+      "Pointwise/other": {
+        "num_events": 374,
+        "sum_ms": 17.091818
+      }
+    }
+  }
+]
