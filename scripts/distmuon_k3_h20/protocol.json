@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "variants": {
+    "main": "8a3f5bcaa4fd51ea6af6fb4bbb90ef03bcb139d0",
+    "pr": "c8ea2ea74dd69beb63eb85893af08cbb2e753302"
+  },
+  "world_size": 8,
+  "num_steps": 40,
+  "num_warmup_steps": 10,
+  "num_trials": 3,
+  "seq_len": 512,
+  "seed": 42,
+  "recipe": "kimi_k3_debugmodel",
+  "dataset": "cc12m-test",
+  "source_files": [
+    "torchtitan/distributed/flex_shard/dist_muon.py",
+    "torchtitan/distributed/flex_shard/_optimizer_reshard_schedule.py",
+    "torchtitan/distributed/flex_shard/_optimizer_reshard_runtime.py",
+    "torchtitan/trainer.py",
+    "torchtitan_recipes/tests/models/kimi_k3.py",
+    "tests/assets/cc12m_test/cc12m-train-0000.tar",
+    "tests/assets/tokenizer/tokenizer.json",
+    "tests/assets/tokenizer/tokenizer_config.json"
+  ]
+}
