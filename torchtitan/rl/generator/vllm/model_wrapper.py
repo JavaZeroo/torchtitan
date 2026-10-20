@@ -107,6 +107,7 @@ def _replace_vllm_layer_configs(model_config):
             from torchtitan.rl.generator.vllm.gdn import VLLMInnerGDN
 
             vllm_inner_gdn_cfg = VLLMInnerGDN.Config(
+                impl=delta_net_cfg.inner_attention.kernel.impl,
                 layer_idx=layer_idx,
                 num_k_heads=(
                     delta_net_cfg.in_proj_q.out_features // delta_net_cfg.key_head_dim
@@ -131,6 +132,10 @@ def _replace_vllm_layer_configs(model_config):
             kda_cfg = attention_cfg
             from torchtitan.rl.generator.vllm.kda import VLLMInnerKDA
 
+            if kda_cfg.inner_attention.kernel.impl == "reference":
+                raise ValueError(
+                    "Attention Gym reference execution is not supported by the vLLM KDA adapter."
+                )
             vllm_inner_kda_cfg = VLLMInnerKDA.Config(
                 num_heads=kda_cfg.n_heads,
                 head_dim=kda_cfg.head_dim,

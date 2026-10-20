@@ -177,6 +177,7 @@ def test_single_token_reused_state_capture(monkeypatch, batch_invariant: bool) -
     )
     layer = gdn.VLLMInnerGDN.__new__(gdn.VLLMInnerGDN)
     torch.nn.Module.__init__(layer)
+    layer.impl = "fused"
     layer.prefix = "gdn"
     layer.local_num_k_heads = layer.local_num_v_heads = 16
     layer.head_k_dim = layer.head_v_dim = 128

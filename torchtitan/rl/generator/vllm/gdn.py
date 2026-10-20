@@ -38,6 +38,7 @@ from torchtitan.distributed.batch_invariant import is_in_batch_invariant_mode
 from torchtitan.models.common.attention import InnerAttention, LinearAttentionMetadata
 from torchtitan.models.common.attention.gdn import GDN
 from torchtitan.models.common.attention.linear_attention import chunk_kernel_options
+from torchtitan.models.common.attention_gym import AttentionGymConfig
 from torchtitan.models.common.attn_gym import (
     causal_conv1d_decode,
     gate_transform,
@@ -48,6 +49,7 @@ from torchtitan.models.common.attn_gym import (
     recurrent_gdn_decode,
 )
 from torchtitan.models.common.decoder import Decoder
+from torchtitan.models.common.gdn_reference import paged_gdn_reference
 from torchtitan.rl.generator.vllm.linear_attention import (
     configure_hybrid_state,
     LinearAttentionExecutionPath,
@@ -68,7 +70,7 @@ class VLLMInnerGDN(InnerAttention, MambaBase):
     """
 
     @dataclass(kw_only=True, slots=True)
-    class Config(InnerAttention.Config):
+    class Config(InnerAttention.Config, AttentionGymConfig):
         layer_idx: int
         num_k_heads: int
         num_v_heads: int
@@ -79,7 +81,17 @@ class VLLMInnerGDN(InnerAttention, MambaBase):
     def __init__(self, config: Config) -> None:
         super().__init__()
 
+        self.impl = config.impl
         vllm_config = get_current_vllm_config()
+        if self.impl == "reference":
+            if is_in_batch_invariant_mode():
+                raise ValueError(
+                    "Attention Gym reference generation requires batch_invariant=False."
+                )
+            if not vllm_config.model_config.enforce_eager:
+                raise ValueError(
+                    "Attention Gym reference generation requires vLLM enforce_eager=True."
+                )
         self.tensor_parallel_size = vllm_config.parallel_config.tensor_parallel_size
         self.model_config = vllm_config.model_config
         self.cache_config = vllm_config.cache_config
@@ -233,6 +245,31 @@ class VLLMInnerGDN(InnerAttention, MambaBase):
             and cu_seqlens is not None
             and has_initial_state is not None
         )
+        if self.impl == "reference":
+            extent = (
+                state_indices.numel()
+                if gdn_metadata.execution_path
+                is LinearAttentionExecutionPath.SINGLE_TOKEN
+                else num_actual_tokens
+            )
+            output[:extent].copy_(
+                paged_gdn_reference(
+                    mixed_qkv[:extent],
+                    a[:extent],
+                    b[:extent],
+                    conv_weight,
+                    A_log,
+                    dt_bias,
+                    self.kv_cache[0],
+                    self.kv_cache[1],
+                    cu_seqlens,
+                    state_indices,
+                    has_initial_state,
+                    num_key_heads=self.local_num_k_heads,
+                    key_head_dim=self.head_k_dim,
+                )
+            )
+            return
         # SP/model-input rounding need not pad attention metadata. FULL bucket
         # padding does: its prepared rows and captured slices stay fixed while
         # the builder restages slots and freshness, including null padding.
