@@ -37,6 +37,7 @@ def validate_model_training_config(
     """Validate compatibility between a model and its training configuration."""
     from torchtitan.distributed.cuda_graph import cuda_graphs_supported
     from torchtitan.models.common.attention import VarlenInnerAttention
+    from torchtitan.models.common.attention_gym import AttentionGymConfig
     from torchtitan.models.common.decoder import Decoder
     from torchtitan.models.common.moe import MoE
     from torchtitan.models.common.moe.token_dispatcher import (
@@ -44,6 +45,23 @@ def validate_model_training_config(
         HybridEPTokenDispatcher,
         LocalTokenDispatcher,
     )
+
+    for fqn, kernel_config, _, _ in model.traverse(AttentionGymConfig):
+        if kernel_config.impl != "reference":
+            continue
+        if debug.batch_invariant:
+            raise ValueError(
+                f"Attention Gym reference execution at {fqn} requires debug.batch_invariant=False."
+            )
+        if parallelism.context_parallel_degree > 1:
+            raise ValueError(
+                f"Attention Gym reference execution at {fqn} requires context_parallel_degree=1."
+            )
+        if not training.disable_cuda_graphs and cuda_graphs_supported():
+            raise ValueError(
+                f"Attention Gym reference execution at {fqn} reads document "
+                "offsets on the host; set training.disable_cuda_graphs=True."
+            )
 
     model_context_length = getattr(model, "max_context_length", None)
     if (

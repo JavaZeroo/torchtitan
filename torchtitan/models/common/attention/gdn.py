@@ -21,6 +21,11 @@ from torch import nn
 
 from torchtitan.distributed.batch_invariant import is_in_batch_invariant_mode
 from torchtitan.models.base.module import Module
+from torchtitan.models.common.attention_gym import (
+    AttentionGymConfig,
+    causal_conv1d as selected_causal_conv1d,
+    l2norm as selected_l2norm,
+)
 
 from torchtitan.models.common.attn_gym import (
     _ChunkGDN,
@@ -30,6 +35,7 @@ from torchtitan.models.common.attn_gym import (
     ContextParallelRouting,
     is_missing_kernel,
     l2norm,
+    l2norm_fwd_ref,
     recurrent_gdn,
     require_attn_gym,
 )
@@ -216,13 +222,18 @@ class GDNKernel(Module):
     """
 
     @dataclass(kw_only=True, slots=True)
-    class Config(Module.Config):
+    class Config(AttentionGymConfig):
         pass
 
     def __init__(self, config: Config):
         # Every attn_gym export this module calls; keep the list in sync.
-        require_attn_gym(chunk_gdn, recurrent_gdn, l2norm)
+        require_attn_gym(
+            chunk_gdn,
+            recurrent_gdn,
+            l2norm if config.impl == "fused" else l2norm_fwd_ref,
+        )
         super().__init__()
+        self.impl = config.impl
 
     def forward(
         self,
@@ -240,7 +251,11 @@ class GDNKernel(Module):
         g_BTH = g_TH.unsqueeze(0)
         beta_BTH = beta_TH.unsqueeze(0)
 
-        if is_in_batch_invariant_mode() and cu_seqlens is not None:
+        if (
+            self.impl == "fused"
+            and is_in_batch_invariant_mode()
+            and cu_seqlens is not None
+        ):
             return _recurrent_gdn_fwd(
                 xq_BTHK,
                 xk_BTHK,
@@ -250,18 +265,24 @@ class GDNKernel(Module):
                 cu_seqlens,
             ).squeeze(0)
 
-        normalized_q = l2norm(xq_BTHK, cu_seqlens=cu_seqlens)
-        normalized_k = l2norm(xk_BTHK, cu_seqlens=cu_seqlens)
+        normalized_q_BTHK = selected_l2norm(
+            xq_BTHK, cu_seqlens=cu_seqlens, impl=self.impl
+        )
+        normalized_k_BTHK = selected_l2norm(
+            xk_BTHK, cu_seqlens=cu_seqlens, impl=self.impl
+        )
         output, _ = chunk_gdn(
-            normalized_q,
-            normalized_k,
+            normalized_q_BTHK,
+            normalized_k_BTHK,
             xv_BTHV,
             g_BTH,
             beta_BTH,
             cu_seqlens=cu_seqlens,
             scale=xq_BTHK.shape[-1] ** -0.5,
-            impl="fused",
-            kernel_options=chunk_kernel_options(xq_BTHK),
+            impl=self.impl,
+            kernel_options=chunk_kernel_options(xq_BTHK)
+            if self.impl == "fused"
+            else None,
         )
         return output.squeeze(0)
 
@@ -300,8 +321,10 @@ class InnerGDN(InnerAttention):
 
     def __init__(self, config: Config):
         # Every attn_gym export this module calls; keep the list in sync.
-        require_attn_gym(causal_conv1d)
+        if config.kernel.impl == "fused":
+            require_attn_gym(causal_conv1d)
         super().__init__()
+        self.impl = config.kernel.impl
         self.kernel = config.kernel.build()
 
     def forward(
@@ -410,6 +433,14 @@ class InnerGDN(InnerAttention):
         routing: ContextParallelRouting | None,
     ) -> torch.Tensor:
         del routing
+        if self.impl == "reference":
+            return selected_causal_conv1d(
+                x_TC.unsqueeze(0),
+                weight_C1W[:, 0],
+                cu_seqlens=cu_seqlens,
+                initial_state=initial_state,
+                impl=self.impl,
+            ).squeeze(0)
         if initial_state is not None:
             output_1TC = causal_conv1d(
                 x_TC.unsqueeze(0),

@@ -5,6 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 import torch
@@ -68,6 +69,33 @@ def test_gdn_supports_eager_and_full_decode_only_modes(graph_mode):
         else CUDAGraphMode.NONE
     )
     assert (decode_mode, prefill_mode) == (expected_decode, CUDAGraphMode.NONE)
+
+
+@pytest.mark.parametrize(
+    "batch_invariant,enforce_eager,error",
+    [(False, False, "enforce_eager=True"), (True, True, "batch_invariant=False")],
+)
+def test_reference_generation_config(
+    monkeypatch, batch_invariant, enforce_eager, error
+):
+    monkeypatch.setattr(gdn, "is_in_batch_invariant_mode", lambda: batch_invariant)
+    monkeypatch.setattr(
+        gdn,
+        "get_current_vllm_config",
+        lambda: SimpleNamespace(
+            model_config=SimpleNamespace(enforce_eager=enforce_eager)
+        ),
+    )
+    config = gdn.VLLMInnerGDN.Config(
+        impl="reference",
+        layer_idx=0,
+        num_k_heads=1,
+        num_v_heads=2,
+        head_k_dim=128,
+        head_v_dim=128,
+    )
+    with pytest.raises(ValueError, match=error):
+        config.build()
 
 
 def test_full_metadata_and_native_dispatch_variants():
@@ -209,9 +237,12 @@ def test_full_metadata_and_native_dispatch_variants():
 
 
 @pytest.mark.parametrize("decode", [False, True])
-def test_forward_respects_prepared_extent_and_decode_padding(monkeypatch, decode):
+@pytest.mark.parametrize("impl", ["fused", "reference"])
+def test_forward_respects_prepared_extent_and_decode_padding(monkeypatch, decode, impl):
     layer = gdn.VLLMInnerGDN.__new__(gdn.VLLMInnerGDN)
     torch.nn.Module.__init__(layer)
+    layer.impl = impl
+    layer.local_num_k_heads = layer.head_k_dim = 1
     layer.prefix, layer.kv_cache = "gdn", (torch.empty(0), torch.empty(0))
     extent = 4 if decode else 3
     metadata = TorchTitanLinearAttentionMetadata(
@@ -236,7 +267,7 @@ def test_forward_respects_prepared_extent_and_decode_padding(monkeypatch, decode
         ),
         has_initial_state=torch.tensor([False, True, False, False]),
     )
-    monkeypatch.setattr(gdn, "is_in_batch_invariant_mode", lambda: True)
+    monkeypatch.setattr(gdn, "is_in_batch_invariant_mode", lambda: impl == "fused")
 
     def convolution(x, *args, has_initial_state=None, **kwargs):
         assert has_initial_state is metadata.has_initial_state
@@ -252,10 +283,31 @@ def test_forward_respects_prepared_extent_and_decode_padding(monkeypatch, decode
         out.fill_(1)
 
     monkeypatch.setattr(layer, "_forward_gdn", recurrent)
+
+    def reference(
+        x,
+        a,
+        b,
+        weight,
+        A_log,
+        bias,
+        conv_cache,
+        state_cache,
+        offsets,
+        slots,
+        initial,
+        **kwargs
+    ):
+        assert kwargs == {"num_key_heads": 1, "key_head_dim": 1}
+        out = x.new_empty(x.shape[0], 1, 1)
+        recurrent(x, a, b, A_log, bias, out, offsets, slots, initial)
+        return out
+
+    monkeypatch.setattr(gdn, "paged_gdn_reference", reference)
     context = ForwardContext(
         no_compile_layers={}, attn_metadata={"gdn": metadata}, slot_mapping={}
     )
-    value, output = torch.ones(6, 1), torch.zeros(6, 1)
+    value, output = torch.ones(6, 1), torch.zeros(6, 1, 1)
     with override_forward_context(context):
         layer._forward(value, value, value, value, None, value, value, output)
         # Reject bias even in profiling and empty-batch early returns.
@@ -267,4 +319,4 @@ def test_forward_respects_prepared_extent_and_decode_padding(monkeypatch, decode
             ):
                 layer._forward(value, value, value, value, value, value, value, output)
     assert metadata.num_actual_tokens == 3
-    assert torch.equal(output[:, 0], (torch.arange(6) < extent).float())
+    assert torch.equal(output[:, 0, 0], (torch.arange(6) < extent).float())

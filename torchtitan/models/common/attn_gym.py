@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from attn_gym.linear.kda.impl.cudnn import ChunkKdaCudnn
     from attn_gym.linear.kda.impl.fused import _ChunkKDA
     from attn_gym.linear.kda.masking import _MaskRows
+    from attn_gym.linear.kda.naive import l2norm_fwd_ref
     from attn_gym.linear.short_conv import (
         causal_conv1d,
         causal_conv1d_decode,
@@ -75,6 +76,7 @@ __all__ = [
     "gather_attn",
     "KernelOptions",
     "l2norm",
+    "l2norm_fwd_ref",
     "lightning_indexer",
     "paged_causal_conv1d",
     "paged_chunk_gdn",
@@ -111,6 +113,7 @@ _EXPORTS = {
     "gather_attn": "attn_gym.sparse.gather_attn",
     "KernelOptions": "attn_gym.linear",
     "l2norm": "attn_gym.linear.kda.fwd.triton.l2norm_fwd",
+    "l2norm_fwd_ref": "attn_gym.linear.kda.naive",
     "lightning_indexer": "attn_gym.sparse",
     "paged_causal_conv1d": "attn_gym.linear.short_conv",
     "paged_chunk_gdn": "attn_gym.linear",

@@ -16,6 +16,9 @@ from torch.distributed.fsdp import FSDPModule, fully_shard
 
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.models.common.attention import InnerAttention, MLAAttention
+from torchtitan.models.common.attention.gdn import GDN
+from torchtitan.models.common.attention.kda import KDA
+from torchtitan.models.common.attention_gym import AttentionGymConfig
 from torchtitan.models.deepseek_v3 import build_model_config as build_deepseek_config
 from torchtitan.models.kimi_k2_7 import build_model_config as build_kimi_k2_7_config
 from torchtitan.models.kimi_k3 import build_model_config as build_kimi_k3_config
@@ -27,6 +30,28 @@ from torchtitan.rl.generator.vllm.model_wrapper import (
     _replace_vllm_layer_configs,
     VLLMModelWrapper,
 )
+
+
+@pytest.mark.parametrize("family", ["gdn", "kda"])
+def test_reference_selection_during_vllm_replacement(family):
+    build_config = build_model_config if family == "gdn" else build_kimi_k3_config
+    config = build_config("debugmodel", parallelism=ParallelismConfig())
+    attention_type = GDN.Config if family == "gdn" else KDA.Config
+    config.layers = [
+        layer for layer in config.layers if isinstance(layer.attention, attention_type)
+    ]
+    assert config.layers
+    for _, kernel, _, _ in config.traverse(AttentionGymConfig):
+        kernel.impl = "reference"
+    if family == "kda":
+        with pytest.raises(ValueError, match="vLLM KDA adapter"):
+            _replace_vllm_layer_configs(config)
+    else:
+        replaced = _replace_vllm_layer_configs(config)
+        assert all(
+            layer.attention.inner_attention.impl == "reference"
+            for layer in replaced.layers
+        )
 
 
 @pytest.mark.parametrize(

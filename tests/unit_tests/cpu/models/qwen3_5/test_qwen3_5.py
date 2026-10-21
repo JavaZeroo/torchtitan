@@ -11,7 +11,7 @@ import pytest
 import torch
 from torch import nn
 
-pytest.importorskip("fla")
+pytest.importorskip("attn_gym")
 
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.models.common.attention.gdn import GDN

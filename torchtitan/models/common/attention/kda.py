@@ -14,6 +14,11 @@ import torch_remat as remat
 from torch import nn
 
 from torchtitan.models.base.module import Module
+from torchtitan.models.common.attention_gym import (
+    AttentionGymConfig,
+    causal_conv1d as selected_causal_conv1d,
+    l2norm as selected_l2norm,
+)
 
 from torchtitan.models.common.attn_gym import (
     _ChunkKDA,
@@ -26,6 +31,7 @@ from torchtitan.models.common.attn_gym import (
     ContextParallelRouting,
     is_missing_kernel,
     l2norm,
+    l2norm_fwd_ref,
     require_attn_gym,
 )
 from torchtitan.models.common.linear import Linear, maybe_gather_tp_input
@@ -60,10 +66,11 @@ class KDAKernel(Module):
     """Apply KDA preprocessing and the Attention Gym kernel."""
 
     @dataclass(kw_only=True, slots=True)
-    class Config(Module.Config):
+    class Config(AttentionGymConfig):
         lower_bound: float = -5.0
 
         def __post_init__(self):
+            AttentionGymConfig.__post_init__(self)
             if not -5.0 <= self.lower_bound < 0.0:
                 raise ValueError(
                     "KDA lower_bound must be in the safe range [-5, 0), "
@@ -72,9 +79,12 @@ class KDAKernel(Module):
 
     def __init__(self, config: Config):
         # Every attn_gym export this module calls; keep the list in sync.
-        require_attn_gym(chunk_kda, bound_gate, l2norm)
+        require_attn_gym(
+            chunk_kda, bound_gate, l2norm if config.impl == "fused" else l2norm_fwd_ref
+        )
         super().__init__()
         self.lower_bound = config.lower_bound
+        self.impl = config.impl
 
     def forward(
         self,
@@ -104,7 +114,10 @@ class KDAKernel(Module):
             beta_1TH,
             cu_seqlens=cu_seqlens,
             autotune=not torch.are_deterministic_algorithms_enabled(),
-            kernel_options=chunk_kernel_options(q_1THK),
+            impl=self.impl,
+            kernel_options=chunk_kernel_options(q_1THK)
+            if self.impl == "fused"
+            else None,
         )
         return output_1THV
 
@@ -118,7 +131,7 @@ class KDAKernel(Module):
         dt_bias_HK: torch.Tensor,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Apply the preprocessing shared by local and CP KDA cores."""
-        if not q_1THK.is_cuda:
+        if self.impl == "fused" and not q_1THK.is_cuda:
             raise RuntimeError("Attention Gym KDA requires CUDA tensors.")
 
         gate_1THK = bound_gate(
@@ -128,12 +141,12 @@ class KDAKernel(Module):
             A_log_H.float(),
             dt_bias_HK.float(),
             lower_bound=self.lower_bound,
-            impl="fused",
+            impl=self.impl,
         )
         autotune = not torch.are_deterministic_algorithms_enabled()
         return (
-            l2norm(q_1THK, autotune=autotune),
-            l2norm(k_1THK, autotune=autotune),
+            selected_l2norm(q_1THK, autotune=autotune, impl=self.impl),
+            selected_l2norm(k_1THK, autotune=autotune, impl=self.impl),
             gate_1THK,
             raw_beta_1TH.float().sigmoid(),
         )
@@ -175,8 +188,10 @@ class InnerKDA(InnerAttention):
 
     def __init__(self, config: Config):
         # Every attn_gym export this module calls; keep the list in sync.
-        require_attn_gym(causal_conv1d)
+        if config.kernel.impl == "fused":
+            require_attn_gym(causal_conv1d)
         super().__init__()
+        self.impl = config.kernel.impl
         self.head_dim = config.head_dim
         self.kernel = config.kernel.build()
 
@@ -274,6 +289,14 @@ class InnerKDA(InnerAttention):
         routing: ContextParallelRouting | None,
     ) -> torch.Tensor:
         del routing
+        if self.impl == "reference":
+            return selected_causal_conv1d(
+                qkv_1TC,
+                conv_weight_C1W[:, 0],
+                cu_seqlens=cu_seqlens,
+                initial_state=initial_state,
+                impl=self.impl,
+            )
         output_1TC = causal_conv1d(
             qkv_1TC,
             conv_weight_C1W[:, 0],
