@@ -2,12 +2,12 @@
 
 这个分支仅用于手动实验，不应合入 PR #5468。它不租卡、不连接远端机器、不自动上传结果，也不修改 GitHub PR/issue。
 
-比较固定版本，避免 `main` 或 PR 分支后续变化混入实验：
+上一轮（main vs `c8ea2ea`）已在 8×H100 上验证逐位一致。本轮验证 PR 新 head `690671216` 与 main 仍然逐位一致，并顺带测 H20 上的性能。比较固定版本，避免 `main` 或 PR 分支后续变化混入实验：
 
 | 版本 | commit |
 |---|---|
 | PR 的 main 基线 | `8a3f5bcaa4fd51ea6af6fb4bbb90ef03bcb139d0` |
-| 显式 compute-regions 重构 | `c8ea2ea74dd69beb63eb85893af08cbb2e753302` |
+| PR #5468 当前 head（含负载相同时优先选已存数据 rank 的改动） | `690671216495121a738684abc9a451b76823a123` |
 
 使用官方 `kimi_k3_debugmodel`：保留视觉模块和 KDA/MLA 路径，CC12M 测试数据，序列长度 512，EP8/FSDP8，BF16，seed=42，`deterministic=True`，`deterministic_warn_only=False`。**所有训练梯度来自真实 forward/backward，没有合成梯度模式。** 这些是 debug 规模实验，不是完整 K3 模型的吞吐或收敛证明。
 
@@ -16,7 +16,7 @@
 在 H20 机器上执行，建议使用独立 clone：
 
 ```bash
-git clone --single-branch --branch experiments/distmuon-k3-h20 \
+git clone --single-branch --branch chore/distmuon-k3-h20-tiebreak \
   https://github.com/JavaZeroo/torchtitan.git torchtitan-k3-h20
 cd torchtitan-k3-h20
 ```
@@ -61,6 +61,8 @@ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 \
 2. **数值验证**：main、PR 各跑 40 步，逐步比较 loss、grad_norm、Muon 参数和 momentum 摘要。不从这两次运行报告性能。
 3. 数值检查通过后，执行 **3 轮配对性能实验**：每次 40 步，前 10 步预热，后 30 步计时；顺序为 main/PR、PR/main、main/PR。
 4. 校验全部结果、生成汇总，最后自动打包。总计 8 次真实训练。
+
+只需要逐位一致结论时，看到 `NUMERICS_PASSED` 后可以 Ctrl-C，结果照样打包；用 `python3 -m scripts.distmuon_k3_h20.analyze <结果目录> --numerics-only` 可离线复核数值部分。
 
 每个 torchrun 默认最多 900 秒。首次编译较慢时可以加 `--timeout 1800`。Ctrl-C 或超时只停止本次实验的子进程组，不操作机器上的其他任务；已有结果和日志仍会打包。
 
