@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # 8x H20 session: PR3 numerics, real-shape slices, K3 debug profile, GPU tests.
 #
-# Usage (from the repository root):
+# Usage:
 #   PY=/path/to/venv/bin/python bash scripts/distmuon_h20_round4/run.sh [OUT_DIR]
-# PARTS="A B C D" selects parts (default all). Finished experiments are skipped,
-# so re-running the same command resumes. The final summary is printed and saved
+# PARTS="A B C D" selects parts (default all). Every run starts the selected parts
+# from scratch and overwrites their old results. The summary is printed and saved
 # to OUT_DIR/summary.txt; paste that text back.
 set -uo pipefail
 
@@ -21,32 +21,17 @@ declare -A SHA=(
   [pr3]=1a69066b1bd33ff5722cb80444bc59f906e2a0f2
 )
 
-mkdir -p "$OUT/src" "$OUT/logs"
 echo "repo $REPO @ $(git -C "$REPO" rev-parse --short HEAD); results in $OUT"
 "$PY" -c "import torch; print('torch', torch.__version__, '|', torch.cuda.get_device_name(0), 'x', torch.cuda.device_count())"
+# Fresh source checkouts every run; prune forgets worktrees whose directories are gone.
+rm -rf "$OUT/src"
+git -C "$REPO" worktree prune
+mkdir -p "$OUT/src" "$OUT/logs"
 for v in main pr5468 pr3; do
-  if [ ! -d "$OUT/src/$v" ]; then
-    git -C "$REPO" worktree add -q --detach "$OUT/src/$v" "${SHA[$v]}" || exit 1
-  fi
-  [ "$(git -C "$OUT/src/$v" rev-parse HEAD)" = "${SHA[$v]}" ] || { echo "src/$v is not at ${SHA[$v]}"; exit 1; }
+  git -C "$REPO" worktree add -q --detach "$OUT/src/$v" "${SHA[$v]}" || exit 1
 done
 
 has() { [[ " $PARTS " == *" $1 "* ]]; }
-
-require_free_gpus() {  # stop before an experiment if another process holds a selected GPU
-  local uuids busy
-  uuids=$(nvidia-smi --query-gpu=index,uuid --format=csv,noheader \
-    | awk -F', ' -v sel=",$CUDA_VISIBLE_DEVICES," 'index(sel, "," $1 ",") {print $2}')
-  [ -z "$uuids" ] && return
-  busy=$(nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv,noheader \
-    | grep -F -f <(printf '%s\n' "$uuids") || true)
-  if [ -n "$busy" ] && [ "${ALLOW_BUSY_GPU:-0}" != 1 ]; then
-    echo "Other processes are using the selected GPUs; stopping so timings stay clean:"
-    echo "$busy"
-    echo "Re-run the same command once the GPUs are free; finished experiments are kept."
-    exit 2
-  fi
-}
 
 bench() {  # variant name config [ENV=VALUE...] -- [extra muon_bench options...]
   local v=$1 name=$2 cfg=$3; shift 3
@@ -54,8 +39,6 @@ bench() {  # variant name config [ENV=VALUE...] -- [extra muon_bench options...]
   while [ $# -gt 0 ] && [ "$1" != "--" ]; do envs+=("$1"); shift; done
   [ $# -gt 0 ] && shift && extra=("$@")
   local dir=$OUT/bench/$name/$v
-  if [ "$(ls "$dir"/rank*.json 2>/dev/null | wc -l)" -eq 8 ]; then echo "  [$v] $name: done"; return; fi
-  require_free_gpus
   echo "  [$v] $name: running"
   rm -rf "$dir"
   mkdir -p "$dir"
@@ -75,12 +58,15 @@ bench() {  # variant name config [ENV=VALUE...] -- [extra muon_bench options...]
 
 if has A; then
   echo "== A: K3 debugmodel real training, main vs PR3 (numerics, then 3 timed pairs)"
-  resume=()
-  [ -f "$OUT/k3debug-pr3/manifest.json" ] && resume=(--resume)
-  require_free_gpus
-  (cd "$REPO" && "$PY" -m scripts.distmuon_k3_h20.run --output "$OUT/k3debug-pr3" \
-      --timeout 1800 "${resume[@]}") > "$OUT/logs/A-k3debug-pr3.log" 2>&1 \
-    && echo "  A done" || echo "  A FAILED, see logs/A-k3debug-pr3.log"
+  rm -rf "$OUT/k3debug-pr3"
+  git -C "$REPO" worktree prune
+  if (cd "$REPO" && "$PY" -m scripts.distmuon_k3_h20.run --output "$OUT/k3debug-pr3" --timeout 1800) \
+      > "$OUT/logs/A-k3debug-pr3.log" 2>&1; then
+    echo "  A done"
+  else
+    echo "  A FAILED, see logs/A-k3debug-pr3.log"
+    tail -3 "$OUT/logs/A-k3debug-pr3.log"
+  fi
 fi
 
 if has B; then
@@ -106,24 +92,13 @@ fi
 
 if has D; then
   echo "== D: flex_shard GPU unit tests"
-  # Test-only packages go to a side directory: installing them into the venv would
-  # change part A's environment fingerprint and block its --resume.
-  deps=$OUT/test-deps
-  if ! PYTHONPATH=$deps "$PY" -c "import pytest, expecttest" 2>/dev/null; then
-    uv=$(command -v uv || echo "$(dirname "$PY")/uv")
-    if [ -x "$uv" ]; then
-      "$uv" pip install --python "$PY" --target "$deps" pytest expecttest
-    else
-      "$PY" -m pip install --target "$deps" pytest expecttest
-    fi > "$OUT/logs/D-install.log" 2>&1 || echo "  installing pytest failed, see logs/D-install.log"
-  fi
+  # pytest and expecttest go to a side directory so the venv stays as it is.
+  PATH="$(dirname "$PY"):$PATH" uv pip install --python "$PY" --target "$OUT/test-deps" pytest expecttest \
+    > "$OUT/logs/D-install.log" 2>&1 \
+    || "$PY" -m pip install --target "$OUT/test-deps" pytest expecttest >> "$OUT/logs/D-install.log" 2>&1
   for v in main pr5468 pr3; do
     log=$OUT/logs/D-gputest-$v.log
-    if [ -f "$log" ] && tail -1 "$log" | grep -q " passed" && ! tail -1 "$log" | grep -qE "failed|error"; then
-      echo "  [$v] done"; continue
-    fi
-    require_free_gpus
-    (cd "$OUT/src/$v" && PYTHONPATH="$OUT/src/$v:$deps" timeout 3600 "$PY" -m pytest -q -p no:cacheprovider \
+    (cd "$OUT/src/$v" && PYTHONPATH="$OUT/src/$v:$OUT/test-deps" timeout 3600 "$PY" -m pytest -q -p no:cacheprovider \
         tests/unit_tests/gpu/distributed/flex_shard) > "$log" 2>&1
     echo "  [$v] $(tail -1 "$log")"
   done
