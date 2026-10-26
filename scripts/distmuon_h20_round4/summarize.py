@@ -140,7 +140,9 @@ def part_d(out):
             print(f"  {v}: not run")
             continue
         lines = [line for line in open(log).read().splitlines() if line.strip()]
-        failed = [line for line in lines if line.startswith(("FAILED", "ERROR"))]
+        failed = [
+            line for line in lines if line.startswith(("FAILED", "ERROR", "E   "))
+        ]
         print(f"  {v}: {lines[-1] if lines else 'empty log'}")
         for line in failed[:5]:
             print(f"    {line[:200]}")
