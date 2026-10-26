@@ -1,3 +1,9 @@
+# Copyright (c) Meta Platforms, Inc. and affiliates.
+# All rights reserved.
+#
+# This source code is licensed under the BSD-style license found in the
+# LICENSE file in the root directory of this source tree.
+
 """Print a short, paste-able summary of an h20-round4 session directory."""
 
 import glob
@@ -36,9 +42,13 @@ def part_a(out):
 
 
 def part_b(out):
-    print("B. Real-shape slices, optimizer only, slowest rank (ms), memory max over ranks")
+    print(
+        "B. Real-shape slices, optimizer only, slowest rank (ms), memory max over ranks"
+    )
     for workload in ("k3_slice", "k25_3"):
-        rows = {v: {"ms": [], "peak": [], "transient": [], "reserved": []} for v in VARIANTS}
+        rows = {
+            v: {"ms": [], "peak": [], "transient": [], "reserved": []} for v in VARIANTS
+        }
         digest_notes = []
         for round_ in (1, 2):
             runs = {
@@ -50,18 +60,25 @@ def part_b(out):
                     if ranks:
                         digest_notes.append(f"r{round_} {v}: only {len(ranks)} ranks")
                     continue
-                rows[v]["ms"].append(max(r["summary"]["total_ms_median"] for r in ranks.values()))
-                rows[v]["peak"].append(max(r["summary"]["peak_bytes_max"] for r in ranks.values()))
+                rows[v]["ms"].append(
+                    max(r["summary"]["total_ms_median"] for r in ranks.values())
+                )
+                rows[v]["peak"].append(
+                    max(r["summary"]["peak_bytes_max"] for r in ranks.values())
+                )
                 rows[v]["transient"].append(
                     max(r["summary"]["transient_bytes_max"] for r in ranks.values())
                 )
-                rows[v]["reserved"].append(max(r["reserved_buffer_bytes"] for r in ranks.values()))
+                rows[v]["reserved"].append(
+                    max(r["reserved_buffer_bytes"] for r in ranks.values())
+                )
             base = runs["main"]
             for v in ("pr5468", "pr3"):
                 if len(base) != 8 or len(runs[v]) != 8:
                     continue
                 diffs = sum(
-                    base[rank]["digests"] != runs[v][rank]["digests"] for rank in range(8)
+                    base[rank]["digests"] != runs[v][rank]["digests"]
+                    for rank in range(8)
                 )
                 digest_notes.append(
                     f"r{round_} {v} vs main: {'same bits' if not diffs else f'DIFFERENT on {diffs} ranks'}"
@@ -83,12 +100,18 @@ def part_b(out):
 
 
 def part_c(out):
-    print("C. K3 debugmodel optimizer profile (rank 0, one step)")
+    print("C. K3 debugmodel optimizer profile (timings per rank, trace of rank 0)")
     for v in ("main", "pr5468"):
         path = os.path.join(out, "bench", "k3debug_profile", v)
         ranks = load_ranks(path)
-        ms = ranks[0]["summary"]["total_ms_median"] if 0 in ranks else None
-        print(f"  {v}: optimizer median {ms if ms is None else round(ms, 2)} ms (rank 0)")
+        if len(ranks) != 8:
+            print(f"  {v}: {len(ranks)} rank results")
+        else:
+            totals = [
+                round(ranks[r]["summary"]["total_ms_median"], 1) for r in range(8)
+            ]
+            hosts = [round(ranks[r]["summary"]["host_ms_median"], 1) for r in range(8)]
+            print(f"  {v}: optimizer median per rank {totals} ms, host {hosts} ms")
         report = os.path.join(path, "trace_report.txt")
         if os.path.exists(report):
             lines = open(report).read().splitlines()
@@ -98,9 +121,11 @@ def part_c(out):
                 if line.startswith(("GPU kernels", "device busy"))
                 or line.startswith("  stream")
             ]
-            families = lines.index("per kernel family (sum of durations):") if (
-                "per kernel family (sum of durations):" in lines
-            ) else None
+            families = (
+                lines.index("per kernel family (sum of durations):")
+                if ("per kernel family (sum of durations):" in lines)
+                else None
+            )
             if families is not None:
                 keep += lines[families + 1 : families + 6]
             for line in keep:

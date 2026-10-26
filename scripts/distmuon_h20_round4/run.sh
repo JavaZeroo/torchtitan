@@ -106,13 +106,24 @@ fi
 
 if has D; then
   echo "== D: flex_shard GPU unit tests"
+  # Test-only packages go to a side directory: installing them into the venv would
+  # change part A's environment fingerprint and block its --resume.
+  deps=$OUT/test-deps
+  if ! PYTHONPATH=$deps "$PY" -c "import pytest, expecttest" 2>/dev/null; then
+    uv=$(command -v uv || echo "$(dirname "$PY")/uv")
+    if [ -x "$uv" ]; then
+      "$uv" pip install --python "$PY" --target "$deps" pytest expecttest
+    else
+      "$PY" -m pip install --target "$deps" pytest expecttest
+    fi > "$OUT/logs/D-install.log" 2>&1 || echo "  installing pytest failed, see logs/D-install.log"
+  fi
   for v in main pr5468 pr3; do
     log=$OUT/logs/D-gputest-$v.log
     if [ -f "$log" ] && tail -1 "$log" | grep -q " passed" && ! tail -1 "$log" | grep -qE "failed|error"; then
       echo "  [$v] done"; continue
     fi
     require_free_gpus
-    (cd "$OUT/src/$v" && PYTHONPATH="$OUT/src/$v" timeout 3600 "$PY" -m pytest -q -p no:cacheprovider \
+    (cd "$OUT/src/$v" && PYTHONPATH="$OUT/src/$v:$deps" timeout 3600 "$PY" -m pytest -q -p no:cacheprovider \
         tests/unit_tests/gpu/distributed/flex_shard) > "$log" 2>&1
     echo "  [$v] $(tail -1 "$log")"
   done
