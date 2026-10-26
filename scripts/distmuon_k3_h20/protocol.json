@@ -2,7 +2,7 @@
   "schema_version": 1,
   "variants": {
     "main": "8a3f5bcaa4fd51ea6af6fb4bbb90ef03bcb139d0",
-    "pr": "c8ea2ea74dd69beb63eb85893af08cbb2e753302"
+    "pr": "1a69066b1bd33ff5722cb80444bc59f906e2a0f2"
   },
   "world_size": 8,
   "num_steps": 40,

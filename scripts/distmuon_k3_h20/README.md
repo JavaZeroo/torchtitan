@@ -2,12 +2,12 @@
 
 这个分支仅用于手动实验，不应合入 PR #5468。它不租卡、不连接远端机器、不自动上传结果，也不修改 GitHub PR/issue。
 
-比较固定版本，避免 `main` 或 PR 分支后续变化混入实验：
+本轮由 `scripts/distmuon_h20_round4/run.sh` 调用，验证 PR3 与 main 逐位一致。比较固定版本，避免 `main` 或 PR 分支后续变化混入实验：
 
 | 版本 | commit |
 |---|---|
 | PR 的 main 基线 | `8a3f5bcaa4fd51ea6af6fb4bbb90ef03bcb139d0` |
-| 显式 compute-regions 重构 | `c8ea2ea74dd69beb63eb85893af08cbb2e753302` |
+| PR3：runtime scratch 全用计算精度（BF16） | `1a69066b1bd33ff5722cb80444bc59f906e2a0f2` |
 
 使用官方 `kimi_k3_debugmodel`：保留视觉模块和 KDA/MLA 路径，CC12M 测试数据，序列长度 512，EP8/FSDP8，BF16，seed=42，`deterministic=True`，`deterministic_warn_only=False`。**所有训练梯度来自真实 forward/backward，没有合成梯度模式。** 这些是 debug 规模实验，不是完整 K3 模型的吞吐或收敛证明。
 
@@ -16,7 +16,7 @@
 在 H20 机器上执行，建议使用独立 clone：
 
 ```bash
-git clone --single-branch --branch experiments/distmuon-k3-h20 \
+git clone --single-branch --branch chore/distmuon-h20-pr3-scale \
   https://github.com/JavaZeroo/torchtitan.git torchtitan-k3-h20
 cd torchtitan-k3-h20
 ```
