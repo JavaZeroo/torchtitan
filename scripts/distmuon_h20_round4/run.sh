@@ -33,14 +33,31 @@ done
 
 has() { [[ " $PARTS " == *" $1 "* ]]; }
 
+require_free_gpus() {  # stop before an experiment if another process holds a selected GPU
+  local uuids busy
+  uuids=$(nvidia-smi --query-gpu=index,uuid --format=csv,noheader \
+    | awk -F', ' -v sel=",$CUDA_VISIBLE_DEVICES," 'index(sel, "," $1 ",") {print $2}')
+  [ -z "$uuids" ] && return
+  busy=$(nvidia-smi --query-compute-apps=gpu_uuid,pid,process_name,used_memory --format=csv,noheader \
+    | grep -F -f <(printf '%s\n' "$uuids") || true)
+  if [ -n "$busy" ] && [ "${ALLOW_BUSY_GPU:-0}" != 1 ]; then
+    echo "Other processes are using the selected GPUs; stopping so timings stay clean:"
+    echo "$busy"
+    echo "Re-run the same command once the GPUs are free; finished experiments are kept."
+    exit 2
+  fi
+}
+
 bench() {  # variant name config [ENV=VALUE...] -- [extra muon_bench options...]
   local v=$1 name=$2 cfg=$3; shift 3
   local envs=() extra=()
   while [ $# -gt 0 ] && [ "$1" != "--" ]; do envs+=("$1"); shift; done
   [ $# -gt 0 ] && shift && extra=("$@")
   local dir=$OUT/bench/$name/$v
-  if [ -f "$dir/rank0.json" ]; then echo "  [$v] $name: done"; return; fi
+  if [ "$(ls "$dir"/rank*.json 2>/dev/null | wc -l)" -eq 8 ]; then echo "  [$v] $name: done"; return; fi
+  require_free_gpus
   echo "  [$v] $name: running"
+  rm -rf "$dir"
   mkdir -p "$dir"
   local start=$SECONDS
   if (cd "$OUT/src/$v" && env "${envs[@]}" PYTHONPATH="$OUT/src/$v:$H" \
@@ -60,6 +77,7 @@ if has A; then
   echo "== A: K3 debugmodel real training, main vs PR3 (numerics, then 3 timed pairs)"
   resume=()
   [ -f "$OUT/k3debug-pr3/manifest.json" ] && resume=(--resume)
+  require_free_gpus
   (cd "$REPO" && "$PY" -m scripts.distmuon_k3_h20.run --output "$OUT/k3debug-pr3" \
       --timeout 1800 "${resume[@]}") > "$OUT/logs/A-k3debug-pr3.log" 2>&1 \
     && echo "  A done" || echo "  A FAILED, see logs/A-k3debug-pr3.log"
@@ -90,7 +108,10 @@ if has D; then
   echo "== D: flex_shard GPU unit tests"
   for v in main pr5468 pr3; do
     log=$OUT/logs/D-gputest-$v.log
-    if [ -f "$log" ] && grep -qE "passed|failed" "$log"; then echo "  [$v] done"; continue; fi
+    if [ -f "$log" ] && tail -1 "$log" | grep -q " passed" && ! tail -1 "$log" | grep -qE "failed|error"; then
+      echo "  [$v] done"; continue
+    fi
+    require_free_gpus
     (cd "$OUT/src/$v" && PYTHONPATH="$OUT/src/$v" timeout 3600 "$PY" -m pytest -q -p no:cacheprovider \
         tests/unit_tests/gpu/distributed/flex_shard) > "$log" 2>&1
     echo "  [$v] $(tail -1 "$log")"
