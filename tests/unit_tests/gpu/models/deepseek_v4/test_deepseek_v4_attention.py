@@ -12,13 +12,17 @@ numerics are tested in Attention Gym.
 
 import pytest
 import torch
+from torchtitan.models.common.rope import ComplexRoPE
 
 from torchtitan.models.deepseek_v4.attention import (
     CompressedSparseAttention,
+    DeepSeekV4Attention,
+    DSV4InnerAttention,
     HeavilyCompressedAttention,
     SlidingWindowAttention,
 )
 from torchtitan.models.deepseek_v4.compressor import Indexer
+from torchtitan.models.deepseek_v4.flavors import _make_v4_attn_config
 
 SEQLEN, N_HEADS, HEAD_DIM, WINDOW, SCALE, TOPK = 32, 4, 8, 6, 0.1234, 5
 
@@ -137,3 +141,88 @@ def test_matches_dense_masked_attention(cls, ratio, device, dtype, tol):
     torch.testing.assert_close(out.cpu().double(), ref, **tol)
     for grad, ref_grad in zip(grads, ref_grads, strict=True):
         torch.testing.assert_close(grad.cpu().double(), ref_grad, **tol)
+
+
+def test_query_rescale_can_be_overridden_without_replacing_projections():
+    """V4 removes query magnitude; a variant can preserve it with one override."""
+
+    class UnnormalizedQueryAttention(DeepSeekV4Attention):
+        def _normalize_query(self, q):
+            return q
+
+    cfg = _make_v4_attn_config(
+        layer_id=0,
+        dim=16,
+        n_heads=4,
+        head_dim=8,
+        rope_head_dim=4,
+        q_lora_rank=8,
+        o_lora_rank=4,
+        n_groups=2,
+        compress_ratio=1,
+        window_size=6,
+        norm_eps=0.0,
+        index_n_heads=2,
+        index_head_dim=8,
+        index_topk=2,
+        n_layers=1,
+        rope=ComplexRoPE.Config(dim=4, max_context_length=16),
+        enable_sp=False,
+    )
+    torch.manual_seed(0)
+    base = cfg.build()
+    base.init_states()
+    variant = UnnormalizedQueryAttention(cfg)
+    variant.load_state_dict(base.state_dict(), strict=True)
+    x = torch.randn(8, 16)
+    positions = torch.arange(8)
+    for module, scale in ((base, 1), (variant, 2)):
+        qr, q, kv = module._project_qkv(x, positions)
+        with torch.no_grad():
+            module.wq_b.weight.mul_(2)
+        scaled_qr, scaled_q, scaled_kv = module._project_qkv(x, positions)
+        torch.testing.assert_close(scaled_qr, qr, rtol=0, atol=0)
+        torch.testing.assert_close(scaled_kv, kv, rtol=0, atol=0)
+        torch.testing.assert_close(scaled_q, q * scale)
+
+
+def test_ratio_one_compressed_pool_preserves_packed_document_boundaries():
+    """A non-empty ratio-1 pool can reuse the core without mixing documents."""
+
+    class RatioOnePoolAttention(DSV4InnerAttention):
+        def _compressed_cu_seqlens(self, cu_seqlens):
+            return cu_seqlens
+
+    module = RatioOnePoolAttention(
+        DSV4InnerAttention.Config(
+            window_size=2, compress_ratio=1, softmax_scale=0.5, index_topk=1
+        )
+    )
+    torch.manual_seed(0)
+    inputs = [
+        torch.randn(*shape, dtype=torch.float64, requires_grad=True)
+        for shape in ((8, 2, 8), (8, 8), (8, 8), (2,))
+    ]
+    q, swa_k, cmp_k, sink = inputs
+    # Select the first compressed entry of each query's document.
+    topk = torch.zeros(8, 1, dtype=torch.int32)
+    cu = torch.tensor([0, 3, 8], dtype=torch.int32)
+    packed = module._gather_attn(q, swa_k, cmp_k, topk, sink, cu)
+    separate = torch.cat(
+        [
+            module._gather_attn(
+                q[start:end],
+                swa_k[start:end],
+                cmp_k[start:end],
+                topk[start:end],
+                sink,
+                None,
+            )
+            for start, end in ((0, 3), (3, 8))
+        ]
+    )
+    torch.testing.assert_close(packed, separate)
+    packed_grads = torch.autograd.grad(packed.square().sum(), inputs)
+    separate_grads = torch.autograd.grad(separate.square().sum(), inputs)
+    for actual, expected in zip(packed_grads, separate_grads, strict=True):
+        torch.testing.assert_close(actual, expected)

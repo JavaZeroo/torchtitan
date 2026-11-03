@@ -87,6 +87,20 @@ class DSV4InnerAttention(InnerAttention):
         self.index_topk = config.index_topk
         self.aux_loss = config.aux_loss.build() if config.aux_loss is not None else None
 
+    def _compressed_cu_seqlens(self, cu_seqlens):
+        """Return compressed-pool offsets; V4's ratio-1 SWA pool is empty.
+
+        Variants with a non-empty ratio-1 pool can override this method while
+        reusing the attention, LSE, and auxiliary-loss handling below.
+        """
+        if cu_seqlens is None:
+            return None
+        return (
+            compressed_cu_seqlens(cu_seqlens, self.compress_ratio)
+            if self.compress_ratio > 1
+            else torch.zeros_like(cu_seqlens)
+        )
+
     def _gather_attn(
         self,
         q_THD,
@@ -105,14 +119,7 @@ class DSV4InnerAttention(InnerAttention):
         With packed ``cu_seqlens`` the window stays inside each document and the
         indices are local to the query's document in the packed ``cmp_k_SD``.
         """
-        cu_seqlens_k = None
-        if cu_seqlens is not None:
-            # SWA passes an empty compressed pool: every document's span is empty.
-            cu_seqlens_k = (
-                compressed_cu_seqlens(cu_seqlens, self.compress_ratio)
-                if self.compress_ratio > 1
-                else torch.zeros_like(cu_seqlens)
-            )
+        cu_seqlens_k = self._compressed_cu_seqlens(cu_seqlens)
         with spmd.no_typecheck():
             # gather_attn takes [B, H, T, D]; the KV latent has one head.
             aux_loss = self.aux_loss if self.training else None
@@ -338,15 +345,8 @@ class DeepSeekV4Attention(Attention):
 
         self.inner_attention = cfg.inner_attention.build()
 
-    def forward(
-        self,
-        x,
-        attention_metadata=None,
-        positions=None,
-        aux_loss_denominator=None,
-        padding_mask=None,
-    ):
-        """Apply one DeepSeek V4 attention layer over folded tokens."""
+    def _gather_input(self, x):
+        """Gather the token stream once for all attention branches under TP/SP."""
         tp_group = spmd_mesh_group(MeshAxisName.TP)
         if tp_group is not None:
             # Query, KV, compressor, and indexer branches consume x. Gather
@@ -358,7 +358,24 @@ class DeepSeekV4Attention(Attention):
                 dst=spmd.R,
                 backward_options={"op_dtype": x.dtype},
             )
+        return x
 
+    def _normalize_query(self, q):
+        """Apply V4's per-head RMS rescale after the query projection.
+
+        This is separate from the latent ``q_norm`` before ``wq_b``. Variants
+        without the post-projection rescale can return ``q`` unchanged.
+        """
+        return q * torch.rsqrt(q.square().mean(-1, keepdim=True) + self.norm_eps)
+
+    def _project_qkv(self, x, positions):
+        """Project gathered tokens into the latent query, rotated query and KV.
+
+        Returns ``(qr, q, kv)`` with shapes ``[T, q_lora_rank]``,
+        ``[T, local_heads, head_dim]``, and ``[T, head_dim]``. The latent query
+        is also consumed by the sparse indexer. TP layouts and remat markers
+        stay with the projections so variants can reuse them together.
+        """
         num_tokens = x.size(0)
         rd = self.rope_head_dim
 
@@ -372,7 +389,7 @@ class DeepSeekV4Attention(Attention):
             _assert_spmd_attention_type(q, tp=spmd.S(1))
         # The rescale reads the wq_b projection output with bare ops.
         remat.recompute_needs_tensor(q)
-        q = q * torch.rsqrt(q.square().mean(-1, keepdim=True) + self.norm_eps)
+        q = self._normalize_query(q)
         q_nope, q_rope = torch.split(q, [self.head_dim - rd, rd], dim=-1)
 
         kv = self.wkv(x)
@@ -384,7 +401,19 @@ class DeepSeekV4Attention(Attention):
         q_rope, kv_rope = self.rope(q_rope, kv_rope.unsqueeze(1), positions)
         q = torch.cat([q_nope, q_rope], dim=-1)
         kv = torch.cat([kv_nope, kv_rope.squeeze(1)], dim=-1)
+        return qr, q, kv
 
+    def forward(
+        self,
+        x,
+        attention_metadata=None,
+        positions=None,
+        aux_loss_denominator=None,
+        padding_mask=None,
+    ):
+        """Apply one DeepSeek V4 attention layer over folded tokens."""
+        x = self._gather_input(x)
+        qr, q, kv = self._project_qkv(x, positions)
         cu_seqlens = _packed_cu_seqlens(attention_metadata)
         cmp_k = idx_q = idx_k = idx_w = None
         if self.compress_ratio > 1 and hasattr(self, "indexer"):
@@ -426,6 +455,16 @@ class DeepSeekV4Attention(Attention):
                 attention_metadata=attention_metadata,
             )
 
+        return self._project_output(o, positions)
+
+    def _project_output(self, o, positions):
+        """Apply inverse RoPE and grouped output projections to ``[T, H, D]``.
+
+        ``H`` is the local head count and ``D`` is ``head_dim``; the result is
+        the token stream consumed by the enclosing transformer block.
+        """
+        num_tokens = o.size(0)
+        rd = self.rope_head_dim
         o_nope, o_rope = torch.split(o, [self.head_dim - rd, rd], dim=-1)
         o_rope = self.rope(o_rope, positions=positions, inverse=True)
         o = torch.cat([o_nope, o_rope], dim=-1)
