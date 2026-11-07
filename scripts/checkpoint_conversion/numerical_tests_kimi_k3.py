@@ -69,7 +69,7 @@ _PROMPT = (
 )
 
 
-def _reduce_hf_config(hf_config, tt_config, hf_model_path: str) -> None:
+def reduce_hf_config(hf_config, tt_config, hf_model_path: str) -> None:
     """Reduce the released HuggingFace config to the TorchTitan debug model."""
     text_config = hf_config.text_config
     hf_full_attention_layers = [
@@ -219,7 +219,7 @@ def _build_hf_model(
         trust_remote_code=True,
         local_files_only=True,
     )
-    _reduce_hf_config(hf_config, tt_config, hf_model_path)
+    reduce_hf_config(hf_config, tt_config, hf_model_path)
     hf_config.text_config._attn_implementation = _HF_ATTN_BACKEND
     hf_config.vision_config._attn_implementation = _HF_ATTN_BACKEND
     model = AutoModelForCausalLM.from_config(hf_config, trust_remote_code=True)
