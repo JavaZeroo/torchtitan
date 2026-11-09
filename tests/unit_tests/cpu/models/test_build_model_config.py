@@ -38,13 +38,15 @@ _MODELS = [
     "gpt_oss",
     "kimi_k2_7",
     "kimi_k3",
+    "kimi_k3_1",
     "muse_glimmer",
     "flux",
 ]
 
 
 @pytest.mark.parametrize(
-    "model", [name for name in _MODELS if name not in ("deepseek_v4", "kimi_k2_7")]
+    "model",
+    [name for name in _MODELS if name not in ("deepseek_v4", "kimi_k2_7", "kimi_k3_1")],
 )
 def test_model_defaults_to_varlen(model):
     module = importlib.import_module(f"torchtitan.models.{model}")
@@ -74,7 +76,9 @@ def test_model_defaults_to_varlen(model):
     )
 
 
-@pytest.mark.parametrize("model", ["qwen3_5", "qwen3_6", "qwen3_8", "kimi_k3"])
+@pytest.mark.parametrize(
+    "model", ["qwen3_5", "qwen3_6", "qwen3_8", "kimi_k3", "kimi_k3_1"]
+)
 def test_hybrid_layers_have_one_attention_config(model):
     module = importlib.import_module(f"torchtitan.models.{model}")
     config = module.build_model_config("debugmodel", parallelism=ParallelismConfig())
