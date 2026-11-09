@@ -6,7 +6,7 @@
 
 """Kimi K3.1 model flavors, reusing the K3 backbone configuration."""
 
-from dataclasses import replace
+from dataclasses import fields, replace
 from functools import partial
 
 import torch.nn as nn
@@ -24,14 +24,12 @@ from torchtitan.models.kimi_k3 import (
     MODEL_FLAVORS as K3_MODEL_FLAVORS,
 )
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
-from torchtitan.models.kimi_k3.dsa import (
-    KimiDSAIndexer,
-    KimiDSALatentAttention,
-    KimiGatedDSAAttention,
-)
 from torchtitan.models.kimi_k3.model import KimiK3Model
 
-__all__ = ["KimiK3Model", "MODEL_FLAVORS", "build_model_config"]
+from .dsa import KimiDSAIndexer, KimiDSALatentAttention, KimiGatedDSAAttention
+from .model import KimiK31Model, KimiK31TransformerBlock
+
+__all__ = ["KimiK31Model", "MODEL_FLAVORS", "build_model_config"]
 
 _LINEAR_INIT = {"weight": partial(nn.init.trunc_normal_, std=0.02)}
 _NORM_INIT = {"weight": nn.init.ones_, "bias": nn.init.zeros_}
@@ -53,12 +51,15 @@ def _convert_full_attention_to_dsa(
     num_index_heads: int,
     index_head_dim: int,
     index_topk: int,
-) -> KimiK3Model.Config:
+) -> KimiK31Model.Config:
     layers = []
     for layer in config.layers:
+        layer_kwargs = {
+            field.name: getattr(layer, field.name) for field in fields(layer)
+        }
         attention = layer.attention
         if not isinstance(attention, KimiMLAAttention.Config):
-            layers.append(layer)
+            layers.append(KimiK31TransformerBlock.Config(**layer_kwargs))
             continue
 
         indexer = KimiDSAIndexer.Config(
@@ -92,7 +93,7 @@ def _convert_full_attention_to_dsa(
                 compress_ratio=1,
             ),
         )
-        attention = KimiGatedDSAAttention.Config(
+        layer_kwargs["attention"] = KimiGatedDSAAttention.Config(
             dim=attention.dim,
             n_heads=attention.n_heads,
             kv_lora_rank=attention.kv_lora_rank,
@@ -110,8 +111,12 @@ def _convert_full_attention_to_dsa(
             indexer=indexer,
             sharding_config=attention.sharding_config,
         )
-        layers.append(replace(layer, attention=attention))
-    return replace(config, layers=layers)
+        layers.append(KimiK31TransformerBlock.Config(**layer_kwargs))
+    config_kwargs = {
+        field.name: getattr(config, field.name) for field in fields(config)
+    }
+    config_kwargs["layers"] = layers
+    return KimiK31Model.Config(**config_kwargs)
 
 
 def _build_config(
@@ -122,7 +127,7 @@ def _build_config(
     attn_backend: str,
     parallelism: ParallelismConfig,
     seq_len: int,
-) -> KimiK3Model.Config:
+) -> KimiK31Model.Config:
     base_max_context = K3_MODEL_FLAVORS[base_flavor][1]
     config = build_kimi_k3_model_config(
         base_flavor,
@@ -142,7 +147,7 @@ def _build_config(
 
 def _debugmodel(
     *, parallelism: ParallelismConfig, seq_len: int, attn_backend: str
-) -> KimiK3Model.Config:
+) -> KimiK31Model.Config:
     return _build_config(
         base_flavor="debugmodel",
         num_index_heads=4,
@@ -155,7 +160,7 @@ def _debugmodel(
 
 def _kimi_k3_1(
     *, parallelism: ParallelismConfig, seq_len: int, attn_backend: str
-) -> KimiK3Model.Config:
+) -> KimiK31Model.Config:
     return _build_config(
         base_flavor="Kimi-K3",
         num_index_heads=32,
@@ -179,7 +184,7 @@ def build_model_config(
     *,
     parallelism: ParallelismConfig,
     seq_len: int | None = None,
-) -> KimiK3Model.Config:
+) -> KimiK31Model.Config:
     get_config, max_context_len = MODEL_FLAVORS[flavor]
     context_len = seq_len or max_context_len
     if context_len > max_context_len:

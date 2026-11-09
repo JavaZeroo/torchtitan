@@ -89,7 +89,7 @@ def _dump_torchtitan(path: Path) -> None:
     kv_latent, k_shared = compressed.split([64, 64], dim=-1)
     kv_latent = layer.kv_norm(kv_latent)
     q_nope, q_rope = q_main.split([128, 64], dim=-1)
-    from torchtitan.models.kimi_k3.dsa import _select_topk
+    from torchtitan.models.kimi_k3_1.dsa import _select_topk
 
     wkv = layer.inner_attention.wkv_b.weight.view(4, 256, 64)
     w_uk, w_uv = wkv.split([128, 128], dim=1)
@@ -247,6 +247,121 @@ _HF_REPO_ID = "moonshotai/Kimi-K3"
 _HF_REFERENCE_REVISION = "9f62e4e9fffbd0a83ddd60e1c209d828994b3569"
 
 
+def _reduce_hf_config(hf_config, tt_config, hf_model_path: str) -> None:
+    from typing import cast
+
+    from torchtitan.models.common.activation import SiTUGLU
+    from torchtitan.models.common.attention.kda import InnerKDA, KDA
+    from torchtitan.models.common.feed_forward import DenseFeedForward
+    from torchtitan.models.kimi_k3.attention import KimiMLAAttention
+    from torchtitan.models.kimi_k3.moe import KimiLatentMoE
+
+    text_config = hf_config.text_config
+    hf_full_attention_layers = [
+        layer_idx + 1
+        for layer_idx, layer in enumerate(tt_config.layers)
+        if isinstance(layer.attention, KimiMLAAttention.Config)
+    ]
+    hf_kda_layers = [
+        layer_idx + 1
+        for layer_idx, layer in enumerate(tt_config.layers)
+        if isinstance(layer.attention, KDA.Config)
+    ]
+    mla = tt_config.first_full_attention
+    kda = next(
+        layer.attention
+        for layer in tt_config.layers
+        if isinstance(layer.attention, KDA.Config)
+    )
+    inner_attention = cast(InnerKDA.Config, kda.inner_attention)
+    kda_kernel = inner_attention.kernel
+    dense_ffn = next(
+        layer.feed_forward
+        for layer in tt_config.layers
+        if isinstance(layer.feed_forward, DenseFeedForward.Config)
+    )
+    dense_activation = cast(SiTUGLU.Config, dense_ffn.activation_fn)
+    moe = next(
+        layer.feed_forward
+        for layer in tt_config.layers
+        if isinstance(layer.feed_forward, KimiLatentMoE.Config)
+    )
+    assert moe.shared_experts is not None
+    shared_hidden_dim = moe.shared_experts.w13.out_features
+    expert_hidden_dim = moe.routed_experts.w2.in_features
+    if shared_hidden_dim % expert_hidden_dim:
+        raise ValueError(
+            "shared-expert hidden size must be a multiple of routed-expert hidden size"
+        )
+
+    text_overrides = {
+        "vocab_size": tt_config.vocab_size,
+        "hidden_size": tt_config.dim,
+        "intermediate_size": dense_ffn.w13.out_features,
+        "num_hidden_layers": len(tt_config.layers),
+        "num_attention_heads": mla.n_heads,
+        "num_key_value_heads": mla.n_heads,
+        "rms_norm_eps": tt_config.norm.eps,
+        "q_lora_rank": mla.wq_a.out_features,
+        "kv_lora_rank": mla.kv_lora_rank,
+        "qk_nope_head_dim": mla.qk_nope_head_dim,
+        "qk_rope_head_dim": mla.qk_rope_head_dim,
+        "v_head_dim": mla.v_head_dim,
+        "activation_situ_beta": dense_activation.beta,
+        "activation_situ_linear_beta": dense_activation.linear_beta,
+        "num_experts": moe.num_experts,
+        "num_experts_per_token": moe.router.top_k,
+        "num_shared_experts": shared_hidden_dim // expert_hidden_dim,
+        "moe_renormalize": moe.router.route_norm,
+        "moe_intermediate_size": expert_hidden_dim,
+        "routed_expert_hidden_size": moe.routed_down.out_features,
+        "routed_scaling_factor": moe.router.route_scale,
+        "first_k_dense_replace": next(
+            layer_idx
+            for layer_idx, layer in enumerate(tt_config.layers)
+            if isinstance(layer.feed_forward, KimiLatentMoE.Config)
+        ),
+        "attn_res_block_size": tt_config.layers[0].attn_res_block_size,
+        "linear_attn_config": {
+            "full_attn_layers": hf_full_attention_layers,
+            "kda_layers": hf_kda_layers,
+            "head_dim": kda.head_dim,
+            "num_heads": kda.n_heads,
+            "short_conv_kernel_size": kda.conv_kernel_size,
+            "gate_lower_bound": kda_kernel.lower_bound,
+            "use_full_rank_gate": True,
+        },
+    }
+    for name, value in text_overrides.items():
+        setattr(text_config, name, value)
+
+    vision = tt_config.vision_encoder
+    assert vision is not None
+    vision_overrides = {
+        "patch_size": vision.patch_size,
+        "init_pos_emb_height": vision.init_pos_emb_height,
+        "init_pos_emb_width": vision.init_pos_emb_width,
+        "init_pos_emb_time": vision.max_num_frames,
+        "vt_num_attention_heads": vision.block.attn.num_heads,
+        "vt_num_hidden_layers": vision.num_layers,
+        "vt_hidden_size": vision.dim,
+        "vt_intermediate_size": vision.block.mlp.fc1.out_features,
+        "merge_kernel_size": vision.merge_kernel_size,
+        "mm_hidden_size": vision.dim,
+        "qkv_hidden_size": vision.block.attn.dim,
+        "text_hidden_size": tt_config.dim,
+        "pos_emb_interpolation_mode": vision.interpolation_mode,
+    }
+    for name, value in vision_overrides.items():
+        setattr(hf_config.vision_config, name, value)
+
+    for config in (hf_config, text_config):
+        if hasattr(config, "quantization_config"):
+            delattr(config, "quantization_config")
+    text_config._name_or_path = hf_model_path
+    hf_config._name_or_path = hf_model_path
+
+
 @torch.no_grad()
 def _dump_full_selection_logits(workdir: Path) -> None:
     import shutil
@@ -254,11 +369,10 @@ def _dump_full_selection_logits(workdir: Path) -> None:
 
     from huggingface_hub import snapshot_download
 
-    from scripts.checkpoint_conversion.numerical_tests_kimi_k3 import reduce_hf_config
     from torchtitan.config.parallelism import ParallelismConfig
-    from torchtitan.models.kimi_k3.dsa import KimiGatedDSAAttention
     from torchtitan.models.kimi_k3.state_dict_adapter import KimiK3StateDictAdapter
     from torchtitan.models.kimi_k3_1 import build_model_config
+    from torchtitan.models.kimi_k3_1.dsa import KimiGatedDSAAttention
     from transformers import AutoConfig
 
     seq_len = 12
@@ -308,7 +422,7 @@ def _dump_full_selection_logits(workdir: Path) -> None:
     hf_config = AutoConfig.from_pretrained(
         source, trust_remote_code=True, local_files_only=True
     )
-    reduce_hf_config(hf_config, config, str(source))
+    _reduce_hf_config(hf_config, config, str(source))
     # The released special-token IDs exceed the reduced vocabulary. Text-only
     # random inputs do not use them, so use valid IDs for HF model construction.
     for subconfig in (hf_config, hf_config.text_config):

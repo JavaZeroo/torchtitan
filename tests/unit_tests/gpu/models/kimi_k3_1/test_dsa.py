@@ -11,9 +11,10 @@ import torch
 import torch.nn.functional as F
 
 from torchtitan.config.parallelism import ParallelismConfig
+from torchtitan.distributed.activation_remat import DefaultActivationRematConfig
 from torchtitan.models.common.attention import create_varlen_metadata_for_document
-from torchtitan.models.kimi_k3.dsa import KimiGatedDSAAttention
 from torchtitan.models.kimi_k3_1 import build_model_config
+from torchtitan.models.kimi_k3_1.dsa import KimiGatedDSAAttention
 
 
 def _build_dsa_layer(*, training: bool = False) -> KimiGatedDSAAttention:
@@ -150,3 +151,33 @@ def test_sparse_indexer_loss_updates_indexer() -> None:
         assert parameter.grad is not None, name
         assert torch.isfinite(parameter.grad).all(), name
         assert parameter.grad.abs().sum() > 0, name
+
+
+@pytest.mark.skipif(not torch.cuda.is_available(), reason="CUDA is required")
+def test_model_backward_with_activation_remat() -> None:
+    torch.manual_seed(7)
+    config = build_model_config(
+        "debugmodel", seq_len=16, parallelism=ParallelismConfig()
+    )
+    config = replace(config, vision_encoder=None)
+    model = config.build()
+    model.init_states()
+    model = model.to(device="cuda", dtype=torch.bfloat16).train()
+    DefaultActivationRematConfig().apply(model)
+
+    tokens = torch.randint(0, config.vocab_size, (12,), device="cuda")
+    positions = torch.arange(12, dtype=torch.int32, device="cuda")
+    output = model(
+        tokens,
+        positions=positions,
+        attention_metadata=model._get_attention_metadata(positions),
+        aux_loss_denominators=torch.tensor([12.0], device="cuda"),
+    )
+    output.float().square().mean().backward()
+    for block in model.layers.values():
+        if not isinstance(block.attention, KimiGatedDSAAttention):
+            continue
+        for name, parameter in block.attention.indexer.named_parameters():
+            assert parameter.grad is not None, name
+            assert torch.isfinite(parameter.grad).all(), name
+            assert parameter.grad.abs().sum() > 0, name

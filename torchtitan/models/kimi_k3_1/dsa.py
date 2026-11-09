@@ -26,7 +26,7 @@ from torchtitan.models.common.attention import (
 from torchtitan.models.common.linear import maybe_gather_tp_input
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 
-from .attention import KimiMLAAttention
+from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 
 __all__ = ["KimiDSAIndexer", "KimiDSALatentAttention", "KimiGatedDSAAttention"]
 
@@ -91,8 +91,11 @@ class KimiDSAIndexer(Module):
         self, x_TD: torch.Tensor, q_latent_TC: torch.Tensor
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         num_tokens = x_TD.shape[0]
-        idx_q_THD = self.wq_b(q_latent_TC).view(num_tokens, self.n_heads, self.head_dim)
-        idx_k_TD = self.k_norm(self.wk(x_TD))
+        idx_q_THD = self.wq_b(q_latent_TC)
+        idx_k_TD = self.wk(x_TD)
+        remat.recompute_needs_tensor(idx_q_THD, idx_k_TD)
+        idx_q_THD = idx_q_THD.view(num_tokens, self.n_heads, self.head_dim)
+        idx_k_TD = self.k_norm(idx_k_TD)
         # The reference CUDA path produces FP32 head gates directly from BF16
         # operands rather than rounding the projection output to BF16 first.
         idx_w_TH = F.linear(x_TD.float(), self.weights_proj.weight.float()) * (
@@ -349,6 +352,7 @@ class KimiGatedDSAAttention(KimiMLAAttention):
         q_THK = local_head_split(
             self.wq_b(q_normed_TC), self.q_head_dim, cp_shard_dim=0
         )
+        remat.recompute_needs_tensor(q_THK)
         compressed_kv_TC = self.wkv_a(x_TD)
         remat.recompute_needs_tensor(compressed_kv_TC)
         kv_latent_TC, k_shared_TR = torch.split(

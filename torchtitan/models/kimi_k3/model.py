@@ -47,7 +47,6 @@ from torchtitan.models.common.multimodal import (
 from torchtitan.models.common.nn_modules import RMSNorm
 from torchtitan.models.common.vision_encoder_sharding import multimodal_input_sharding
 
-from .dsa import KimiGatedDSAAttention
 from .moe import KimiLatentMoE
 from .state_dict_adapter import KimiK3StateDictAdapter
 from .vision_encoder import KimiK3VisionEncoder
@@ -96,7 +95,7 @@ class AttentionResidual(Function[torch.Tensor]):
 
 
 class KimiK3TransformerBlock(TransformerBlock):
-    """Hybrid KDA/MLA/DSA decoder block with Kimi attention residuals."""
+    """Hybrid KDA/MLA decoder block with Kimi attention residuals."""
 
     @dataclass(kw_only=True, slots=True)
     class Config(TransformerBlock.Config):
@@ -159,16 +158,7 @@ class KimiK3TransformerBlock(TransformerBlock):
                 self.attention_res_norm,
             )
         h_TD = self.attention_norm(h_TD)
-        if isinstance(self.attention, KimiGatedDSAAttention):
-            h_TD = self.attention(
-                h_TD,
-                attention_metadata,
-                positions,
-                aux_loss_denominator=aux_loss_denominator,
-                padding_mask=padding_mask,
-            )
-        else:
-            h_TD = self.attention(h_TD, attention_metadata, positions)
+        h_TD = self.attention(h_TD, attention_metadata, positions)
         # The residual add reads the attention output with bare ops.
         remat.recompute_needs_tensor(h_TD)
         prefix_sum_TD = h_TD if self.first_layer_in_block else x_TD + h_TD
@@ -204,13 +194,11 @@ class KimiK3Model(MultimodalModel):
     def _register_optimizer_hooks(
         cls, optimizers, model_parts, parallelism_context
     ) -> None:
-        from torchtitan.models.common.aux_loss import register_aux_loss_zero_hook
         from torchtitan.models.common.moe import register_moe_quantile_balancing_hook
 
         register_moe_quantile_balancing_hook(
             optimizers, model_parts, parallelism_context
         )
-        register_aux_loss_zero_hook(optimizers, model_parts, parallelism_context)
 
     pipeline_first_stage_module_fqns = ("vision_encoder",)
     pipeline_last_stage_module_fqns = ("output_res_proj", "output_res_norm")
