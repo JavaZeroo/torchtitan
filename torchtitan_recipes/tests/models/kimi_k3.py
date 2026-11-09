@@ -95,12 +95,13 @@ def kimi_k3_debugmodel(
     *,
     parallelism: ParallelismConfig | None = None,
     attn_backend: str = "varlen",
+    model_flavor: str = "debugmodel",
 ) -> Trainer.Config:
     """Debugmodel with per-head Muon for all logical 2D matrices."""
     if parallelism is None:
         parallelism = ParallelismConfig()
     model_config = build_model_config(
-        "debugmodel",
+        model_flavor,
         seq_len=seq_len,
         attn_backend=attn_backend,
         parallelism=parallelism,
@@ -139,6 +140,19 @@ def kimi_k3_debugmodel(
         parallelism=parallelism,
         checkpointer=None,
         activation_remat=DefaultActivationRematConfig(),
+    )
+
+
+def kimi_k3_1_debugmodel(
+    seq_len: int | None = 256,
+    *,
+    parallelism: ParallelismConfig | None = None,
+) -> Trainer.Config:
+    """Use two debug top-k windows per microbatch to exercise sparse DSA."""
+    return kimi_k3_debugmodel(
+        seq_len=seq_len,
+        parallelism=parallelism,
+        model_flavor="debugmodel_dsa",
     )
 
 
@@ -332,7 +346,7 @@ def _dist_muon_optimizer(
                 max_nccl_ctas_for_comms=8,
             ),
             # The remaining parameters are embeddings, norms, biases, the LM
-            # head, the KDA scalars/convolutions, and the vision tower.
+            # head, KDA scalars/convolutions, DSA indexers, and the vision tower.
             AdamW.Config(
                 pattern=r".*",
                 foreach=True,

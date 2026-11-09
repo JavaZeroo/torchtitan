@@ -58,7 +58,7 @@ from torchtitan.models.common.moe.sharding import (
     router_gate_sharding_config,
     router_sharding_config,
 )
-from torchtitan.models.common.nn_modules import GELU, RMSNorm
+from torchtitan.models.common.nn_modules import GELU, LayerNorm, RMSNorm
 from torchtitan.models.common.vision_encoder import (
     InvariantRowParallelLinear,
     VisionAttention,
@@ -81,6 +81,7 @@ from torchtitan.models.kimi_k2_7.sharding import (
 )
 from torchtitan.models.kimi_k2_7.vision_encoder import VisionRotaryEmbedding2D
 from .attention import KimiMLAAttention
+from .dsa import KimiDSAAttention, KimiDSAIndexer, KimiIndexerLoss, KimiSparseAttention
 from .model import AttentionResidual, KimiK3Model, KimiK3TransformerBlock
 from .moe import KimiLatentMoE
 from .sharding import (
@@ -225,6 +226,10 @@ def _mla_config(
     v_head_dim: int,
     attn_backend: str,
     enable_sp: bool,
+    index_topk: int | None = None,
+    index_num_heads: int | None = None,
+    index_head_dim: int | None = None,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiMLAAttention.Config:
     """Low-rank projections and norms stay replicated; up-projections and the
     gate are column-parallel; ``wo`` is row-parallel to the residual layout."""
@@ -243,7 +248,7 @@ def _mla_config(
     )
 
     q_head_dim = qk_nope_head_dim + qk_rope_head_dim
-    return KimiMLAAttention.Config(
+    config = KimiMLAAttention.Config(
         dim=dim,
         n_heads=num_heads,
         kv_lora_rank=kv_lora_rank,
@@ -284,6 +289,68 @@ def _mla_config(
         ),
         inner_attention=inner_attention,
         sharding_config=mla_attention_sharding_config(enable_sp=enable_sp),
+    )
+    if index_topk is None:
+        if index_num_heads is not None or index_head_dim is not None:
+            raise ValueError("DSA head geometry requires index_topk.")
+        return config
+    if index_num_heads is None or index_head_dim is None:
+        raise ValueError("DSA index_topk requires index head geometry.")
+    return KimiDSAAttention.Config(
+        dim=dim,
+        n_heads=num_heads,
+        kv_lora_rank=kv_lora_rank,
+        qk_nope_head_dim=qk_nope_head_dim,
+        qk_rope_head_dim=qk_rope_head_dim,
+        v_head_dim=v_head_dim,
+        wq_a=config.wq_a,
+        q_norm=config.q_norm,
+        wq_b=config.wq_b,
+        wkv_a=config.wkv_a,
+        kv_norm=config.kv_norm,
+        gate=config.gate,
+        wo=config.wo,
+        inner_attention=replace(
+            inner_attention,
+            inner_attention=KimiSparseAttention.Config(
+                index_topk=index_topk,
+                aux_loss=(
+                    None
+                    if indexer_loss_coeff == 0
+                    else KimiIndexerLoss.Config(
+                        coeff=indexer_loss_coeff,
+                        num_heads=num_heads,
+                        reduce_mesh="loss",
+                    )
+                ),
+            ),
+        ),
+        indexer=KimiDSAIndexer.Config(
+            index_num_heads=index_num_heads,
+            index_head_dim=index_head_dim,
+            wq_b=_linear(
+                q_lora_rank,
+                index_num_heads * index_head_dim,
+                sharding_config=replicated_state_sharding_config("weight"),
+            ),
+            wk=_linear(
+                dim,
+                index_head_dim,
+                sharding_config=replicated_state_sharding_config("weight"),
+            ),
+            k_norm=LayerNorm.Config(
+                normalized_shape=index_head_dim,
+                eps=1e-5,
+                param_init={"weight": nn.init.ones_, "bias": nn.init.zeros_},
+                sharding_config=replicated_state_sharding_config("weight", "bias"),
+            ),
+            weights_proj=_linear(
+                dim,
+                index_num_heads,
+                sharding_config=replicated_state_sharding_config("weight"),
+            ),
+        ),
+        sharding_config=config.sharding_config,
     )
 
 
@@ -561,11 +628,15 @@ def _kimi_k3_config(
     num_experts: int,
     top_k: int,
     num_shared_experts: int,
-    vision_encoder: KimiK3VisionEncoder.Config,
+    vision_encoder: KimiK3VisionEncoder.Config | None,
     attn_backend: str,
     parallelism: ParallelismConfig,
+    index_topk: int | None = None,
+    index_num_heads: int | None = None,
+    index_head_dim: int | None = None,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiK3Model.Config:
-    """Assemble a Kimi K3 config from the released topology's free parameters.
+    """Assemble a Kimi K3/K3.1 config from the released topology's parameters.
 
     ``full_attention_layers`` holds zero-based layer indices. Every other layer
     is KDA. Layer 0 is the single dense FFN layer (released
@@ -616,6 +687,10 @@ def _kimi_k3_config(
                         v_head_dim=v_head_dim,
                         attn_backend=attn_backend,
                         enable_sp=enable_sp,
+                        index_topk=index_topk,
+                        index_num_heads=index_num_heads,
+                        index_head_dim=index_head_dim,
+                        indexer_loss_coeff=indexer_loss_coeff,
                     )
                     if is_full_attention
                     else _kda_config(
@@ -693,6 +768,8 @@ def _debugmodel(
     *,
     seq_len: int,
     parallelism: ParallelismConfig,
+    dsa: bool = False,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiK3Model.Config:
     dim = 256
     return _kimi_k3_config(
@@ -728,6 +805,10 @@ def _debugmodel(
         ),
         attn_backend=attn_backend,
         parallelism=parallelism,
+        index_topk=128 if dsa else None,
+        index_num_heads=4 if dsa else None,
+        index_head_dim=64 if dsa else None,
+        indexer_loss_coeff=indexer_loss_coeff,
     )
 
 
@@ -736,6 +817,8 @@ def _kimi_k3(
     *,
     seq_len: int,
     parallelism: ParallelismConfig,
+    dsa: bool = False,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiK3Model.Config:
     dim = 7168
     return _kimi_k3_config(
@@ -771,12 +854,18 @@ def _kimi_k3(
         ),
         attn_backend=attn_backend,
         parallelism=parallelism,
+        index_topk=2048 if dsa else None,
+        index_num_heads=32 if dsa else None,
+        index_head_dim=128 if dsa else None,
+        indexer_loss_coeff=indexer_loss_coeff,
     )
 
 
 MODEL_FLAVORS = {
     "debugmodel": (_debugmodel, 16384),
+    "debugmodel_dsa": (partial(_debugmodel, dsa=True), 16384),
     "Kimi-K3": (_kimi_k3, 262144),
+    "Kimi-K3.1-Pro": (partial(_kimi_k3, dsa=True), 1_048_576),
 }
 
 
@@ -787,7 +876,10 @@ def build_model_config(
     *,
     parallelism: ParallelismConfig,
     seq_len: int | None = None,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiK3Model.Config:
+    if indexer_loss_coeff < 0:
+        raise ValueError("indexer_loss_coeff must be nonnegative.")
     get_config, max_context_len = MODEL_FLAVORS[flavor]
     context_len = seq_len or max_context_len
     if context_len > max_context_len:
@@ -799,6 +891,7 @@ def build_model_config(
         attn_backend=attn_backend,
         seq_len=context_len,
         parallelism=parallelism,
+        indexer_loss_coeff=indexer_loss_coeff,
     )
     if converters is not None:
         validate_converter_compatibility(converters)
