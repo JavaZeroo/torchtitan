@@ -6,13 +6,24 @@
 
 """Kimi K3.1 model configurations used by tests."""
 
-import dataclasses
-
+from torchtitan.components.data.multimodal.mm_datasets import MM_DATASETS
+from torchtitan.components.loss import ChunkedLossWrapper, CrossEntropyLoss
+from torchtitan.components.optim import LRSchedulersContainer, Optim
+from torchtitan.components.tokenizer import MultiModalTokenizer
+from torchtitan.config import PrecisionConfig, TrainingConfig
 from torchtitan.config.parallelism import ParallelismConfig
+from torchtitan.distributed.activation_remat import DefaultActivationRematConfig
+from torchtitan.models.common.config_utils import decoder_vocab_size
+from torchtitan.models.kimi_k3 import KIMI_K3_SPECIAL_TOKENS
 from torchtitan.models.kimi_k3_1 import build_model_config
+from torchtitan.observability.metrics import MetricsProcessor
 from torchtitan.trainer import Trainer
 
-from torchtitan_recipes.tests.models.kimi_k3 import kimi_k3_debugmodel
+from torchtitan_recipes.tests.models.kimi_k3 import (
+    _dist_muon_optimizer,
+    _kimi_k3_multimodal_dataloader,
+    _KimiK3TrainerConfig,
+)
 
 
 def kimi_k3_1_debugmodel(
@@ -20,12 +31,43 @@ def kimi_k3_1_debugmodel(
     *,
     parallelism: ParallelismConfig | None = None,
 ) -> Trainer.Config:
-    """Kimi K3 debug recipe with the K3.1 model; 256 tokens span two top-k windows."""
     if parallelism is None:
         parallelism = ParallelismConfig()
-    return dataclasses.replace(
-        kimi_k3_debugmodel(seq_len, parallelism=parallelism),
-        model=build_model_config(
-            "debugmodel", seq_len=seq_len, parallelism=parallelism
+    model_config = build_model_config(
+        "debugmodel", seq_len=seq_len, parallelism=parallelism
+    )
+    return _KimiK3TrainerConfig(
+        loss=ChunkedLossWrapper.Config(
+            loss_fn=CrossEntropyLoss.Config(
+                global_vocab_size=decoder_vocab_size(model_config),
+            ),
         ),
+        hf_assets_path="./tests/assets/tokenizer",
+        tokenizer=MultiModalTokenizer.Config(**KIMI_K3_SPECIAL_TOKENS),
+        metrics=MetricsProcessor.Config(log_freq=1),
+        model=model_config,
+        dataloader=_kimi_k3_multimodal_dataloader(MM_DATASETS["cc12m-test"]),
+        optim=Optim.Config(
+            optimizer=_dist_muon_optimizer(
+                model_config,
+                muon_lr=8e-4,
+                adamw_lr=8e-4,
+                parallelism=parallelism,
+            ),
+            lr_scheduler=LRSchedulersContainer.Config(
+                warmup_steps=2,
+                decay_ratio=0.8,
+                decay_type="linear",
+                min_lr_factor=0.0,
+            ),
+        ),
+        precision=PrecisionConfig(dtype="bfloat16"),
+        training=TrainingConfig(
+            num_tokens_per_microbatch_per_dp_rank=1 * model_config.max_context_length,
+            steps=10,
+            disable_accelerator_graphs=True,
+        ),
+        parallelism=parallelism,
+        checkpointer=None,
+        activation_remat=DefaultActivationRematConfig(),
     )
