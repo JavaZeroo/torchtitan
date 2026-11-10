@@ -4,12 +4,10 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-from torchtitan.models.kimi_k3.model import KimiK3Model
-
-from .flavors import build_model_config, MODEL_FLAVORS
+from .flavors import build_model_config, KimiK31Model, MODEL_FLAVORS
 
 __all__ = [
-    "KimiK3Model",
+    "KimiK31Model",
     "MODEL_FLAVORS",
     "build_model_config",
 ]

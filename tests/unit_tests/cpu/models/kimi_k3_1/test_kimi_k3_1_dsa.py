@@ -5,7 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 
-from functools import partial
 from unittest.mock import patch
 
 import torch
@@ -16,9 +15,9 @@ from torchtitan.models.common.attention import materialize_mla_kv
 from torchtitan.models.common.aux_loss import AuxLoss
 from torchtitan.models.common.linear import Linear
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
-from torchtitan.models.kimi_k3.flavors import _kimi_k3_config, _mla_config
+from torchtitan.models.kimi_k3.flavors import _kimi_k3_config, _vision_encoder_config
 from torchtitan.models.kimi_k3_1.dsa import KimiSparseAttention
-from torchtitan.models.kimi_k3_1.flavors import _dsa_config
+from torchtitan.models.kimi_k3_1.flavors import _with_dsa
 
 
 def _linear(in_features: int, out_features: int) -> Linear.Config:
@@ -218,7 +217,7 @@ def test_sparse_attention_and_indexer_loss_match_oracle() -> None:
         )
 
 
-def _one_layer_dsa_model_config(*, dsa: bool):
+def _one_layer_k3_config():
     return _kimi_k3_config(
         max_context_length=8,
         dim=8,
@@ -240,27 +239,31 @@ def _one_layer_dsa_model_config(*, dsa: bool):
         num_experts=2,
         top_k=1,
         num_shared_experts=1,
-        vision_encoder=None,
+        vision_encoder=_vision_encoder_config(
+            text_dim=8,
+            dim=8,
+            qkv_dim=8,
+            hidden_dim=16,
+            num_layers=1,
+            num_heads=2,
+            init_pos_emb_height=2,
+            init_pos_emb_width=2,
+        ),
         attn_backend="flex",
         parallelism=ParallelismConfig(),
-        full_attention_config_factory=(
-            partial(
-                _dsa_config,
-                index_topk=16,
-                index_num_heads=3,
-                index_head_dim=4,
-                indexer_loss_coeff=0.01,
-            )
-            if dsa
-            else _mla_config
-        ),
     )
 
 
 def test_full_causal_dsa_model_matches_dense_k3_mla() -> None:
     torch.manual_seed(31)
-    dense_config = _one_layer_dsa_model_config(dsa=False)
-    dsa_config = _one_layer_dsa_model_config(dsa=True)
+    dense_config = _one_layer_k3_config()
+    dsa_config = _with_dsa(
+        dense_config,
+        index_topk=16,
+        index_num_heads=3,
+        index_head_dim=4,
+        indexer_loss_coeff=0.01,
+    )
     with torch.device("meta"):
         dense_model = dense_config.build()
         dsa_model = dsa_config.build()

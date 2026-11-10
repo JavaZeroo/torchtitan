@@ -594,10 +594,9 @@ def _kimi_k3_config(
     num_experts: int,
     top_k: int,
     num_shared_experts: int,
-    vision_encoder: KimiK3VisionEncoder.Config | None,
+    vision_encoder: KimiK3VisionEncoder.Config,
     attn_backend: str,
     parallelism: ParallelismConfig,
-    full_attention_config_factory: Callable[..., KimiMLAAttention.Config] = _mla_config,
 ) -> KimiK3Model.Config:
     """Assemble a Kimi K3 config from the released topology's free parameters.
 
@@ -639,7 +638,7 @@ def _kimi_k3_config(
                 layer_id=layer_idx,
                 attn_res_block_size=attn_res_block_size,
                 attention=(
-                    full_attention_config_factory(
+                    _mla_config(
                         dim=dim,
                         num_heads=num_heads,
                         q_lora_rank=q_lora_rank,
