@@ -6,7 +6,6 @@
 
 """Kimi K3.1 model flavors."""
 
-from dataclasses import replace
 from functools import partial
 
 import torch.nn as nn
@@ -18,6 +17,7 @@ from torchtitan.config.transform import (
 )
 from torchtitan.models.common.decoder_sharding import replicated_state_sharding_config
 from torchtitan.models.common.nn_modules import LayerNorm
+from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 from torchtitan.models.kimi_k3.flavors import (
     _kimi_k3_config,
     _linear,
@@ -26,7 +26,7 @@ from torchtitan.models.kimi_k3.flavors import (
 )
 from torchtitan.models.kimi_k3.model import KimiK3Model
 
-from .dsa import KimiDSAAttention, KimiDSAIndexer, KimiIndexerLoss, KimiSparseAttention
+from .dsa import KimiDSAAttention, KimiDSAIndexer, KimiSparseAttention
 from .model import KimiK31Model
 
 __all__ = ["build_model_config", "KimiK31Model", "MODEL_FLAVORS"]
@@ -74,20 +74,21 @@ def _dsa_config(
         kv_norm=mla.kv_norm,
         gate=mla.gate,
         wo=mla.wo,
-        inner_attention=replace(
-            mla.inner_attention,
-            inner_attention=KimiSparseAttention.Config(
-                index_topk=index_topk,
-                aux_loss=(
-                    None
-                    if indexer_loss_coeff == 0
-                    else KimiIndexerLoss.Config(
-                        coeff=indexer_loss_coeff,
-                        num_heads=num_heads,
-                        reduce_mesh="loss",
-                    )
-                ),
+        inner_attention=KimiSparseAttention.Config(
+            wkv_b=mla.inner_attention.wkv_b,
+            index_topk=index_topk,
+            aux_loss=(
+                None
+                if indexer_loss_coeff == 0
+                else SparseIndexerLoss.Config(
+                    coeff=indexer_loss_coeff,
+                    reduce_mesh="loss",
+                    softmax_scale=mla.softmax_scale,
+                    num_heads=num_heads,
+                    compress_ratio=1,
+                )
             ),
+            sharding_config=mla.inner_attention.sharding_config,
         ),
         indexer=KimiDSAIndexer.Config(
             index_num_heads=index_num_heads,

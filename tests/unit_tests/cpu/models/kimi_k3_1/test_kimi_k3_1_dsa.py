@@ -14,16 +14,17 @@ import torch.nn.functional as F
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.distributed.activation_remat import DefaultActivationRematConfig
 from torchtitan.models import kimi_k3, kimi_k3_1
+from torchtitan.models.common.attention import materialize_mla_kv
 from torchtitan.models.common.aux_loss import AuxLoss
 from torchtitan.models.common.linear import Linear
 from torchtitan.models.common.nn_modules import LayerNorm
+from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 from torchtitan.models.kimi_k3.flavors import _kimi_k3_config, _mla_config
 from torchtitan.models.kimi_k3.model import KimiK3Model
 from torchtitan.models.kimi_k3_1.dsa import (
     KimiDSAAttention,
     KimiDSAIndexer,
-    KimiIndexerLoss,
     KimiSparseAttention,
 )
 from torchtitan.models.kimi_k3_1.flavors import _dsa_config
@@ -70,7 +71,7 @@ def test_dsa_flavor_replaces_exactly_the_k3_full_attention_layers() -> None:
     for attention in released_dsa:
         assert attention.indexer.index_num_heads == 32
         assert attention.indexer.index_head_dim == 128
-        assert attention.inner_attention.inner_attention.index_topk == 2048
+        assert attention.inner_attention.index_topk == 2048
 
 
 def test_indexer_projection_matches_reference_math() -> None:
@@ -146,7 +147,7 @@ def _random_sparse_inputs(
     lengths: list[int], *, topk: int
 ) -> tuple[dict[str, torch.Tensor], KimiSparseAttention.Config]:
     num_tokens = sum(lengths)
-    num_heads, head_dim, value_dim = 2, 6, 5
+    num_heads, nope_dim, shared_dim, value_dim, latent_dim = 2, 4, 2, 5, 14
     index_heads, index_dim = 3, 8
 
     def tensor(*shape: int, requires_grad: bool = False) -> torch.Tensor:
@@ -157,32 +158,67 @@ def _random_sparse_inputs(
         )
 
     inputs = {
-        "q_THK": tensor(num_tokens, num_heads, head_dim, requires_grad=True),
-        "k_THK": tensor(num_tokens, num_heads, head_dim, requires_grad=True),
-        "v_THV": tensor(num_tokens, num_heads, value_dim, requires_grad=True),
+        "q_THK": tensor(
+            num_tokens, num_heads, nope_dim + shared_dim, requires_grad=True
+        ),
+        "kv_c_normed_TL": tensor(num_tokens, latent_dim, requires_grad=True),
+        "k_shared_TR": tensor(num_tokens, shared_dim, requires_grad=True),
         "idx_q_TIE": tensor(num_tokens, index_heads, index_dim),
-        "idx_k_TE": tensor(num_tokens, index_dim),
+        "idx_k_TE": tensor(num_tokens, index_dim).abs(),
         "idx_w_TI": tensor(num_tokens, index_heads),
     }
-    return inputs, KimiSparseAttention.Config(index_topk=topk)
+    inputs["idx_q_TIE"][:, 0].abs_()
+    config = KimiSparseAttention.Config(
+        wkv_b=_linear(latent_dim, num_heads * (nope_dim + value_dim)),
+        index_topk=topk,
+    )
+    return inputs, config
+
+
+def _build_sparse_attention(config: KimiSparseAttention.Config) -> KimiSparseAttention:
+    attention = config.build()
+    attention.wkv_b.double()
+    with torch.no_grad():
+        attention.wkv_b.weight.normal_()
+    return attention
+
+
+def _expanded_inputs(
+    inputs: dict[str, torch.Tensor], wkv_b_weight: torch.Tensor
+) -> dict[str, torch.Tensor]:
+    q_THK = inputs["q_THK"]
+    kv_THP = F.linear(inputs["kv_c_normed_TL"], wkv_b_weight).unflatten(
+        -1, (q_THK.shape[1], -1)
+    )
+    k_THK, v_THV = materialize_mla_kv(q_THK, kv_THP, inputs["k_shared_TR"])
+    expanded = {
+        name: value
+        for name, value in inputs.items()
+        if name not in ("kv_c_normed_TL", "k_shared_TR")
+    }
+    return {**expanded, "k_THK": k_THK, "v_THV": v_THV}
+
+
+_MAIN_INPUTS = ("q_THK", "kv_c_normed_TL", "k_shared_TR")
+_INDEXER_INPUTS = ("idx_q_TIE", "idx_k_TE", "idx_w_TI")
 
 
 def test_sparse_attention_output_and_gradients_match_independent_oracle() -> None:
     torch.manual_seed(7)
     for topk in (3, 16):
         inputs, config = _random_sparse_inputs([8], topk=topk)
-        attention = config.build().train()
+        attention = _build_sparse_attention(config).train()
         actual = attention(**inputs, scale=0.173)
         expected = _reference_sparse_attention(
-            **inputs, topk=topk, scale=0.173, lengths=[8]
+            **_expanded_inputs(inputs, attention.wkv_b.weight),
+            topk=topk,
+            scale=0.173,
+            lengths=[8],
         )
         grad = torch.randn_like(actual)
-        actual_grads = torch.autograd.grad(
-            actual, (inputs["q_THK"], inputs["k_THK"], inputs["v_THV"]), grad
-        )
-        expected_grads = torch.autograd.grad(
-            expected, (inputs["q_THK"], inputs["k_THK"], inputs["v_THV"]), grad
-        )
+        targets = (*(inputs[name] for name in _MAIN_INPUTS), attention.wkv_b.weight)
+        actual_grads = torch.autograd.grad(actual, targets, grad)
+        expected_grads = torch.autograd.grad(expected, targets, grad)
         torch.testing.assert_close(actual, expected)
         for actual_grad, expected_grad in zip(
             actual_grads, expected_grads, strict=True
@@ -194,7 +230,7 @@ def test_packed_documents_match_isolated_forward_and_backward() -> None:
     torch.manual_seed(11)
     lengths = [3, 5, 2]
     inputs, config = _random_sparse_inputs(lengths, topk=3)
-    attention = config.build().train()
+    attention = _build_sparse_attention(config).train()
     positions = torch.cat([torch.arange(length) for length in lengths]).int()
     padding_mask = torch.tensor([False, False, False] + [False] * 5 + [True, True])
     metadata = config.build_attention_metadata(
@@ -209,13 +245,11 @@ def test_packed_documents_match_isolated_forward_and_backward() -> None:
     )
     grad = torch.randn_like(packed)
     packed_grads = torch.autograd.grad(
-        packed, (inputs["q_THK"], inputs["k_THK"], inputs["v_THV"]), grad
+        packed, tuple(inputs[name] for name in _MAIN_INPUTS), grad
     )
 
     isolated = []
-    isolated_grads = [
-        torch.zeros_like(inputs[name]) for name in ("q_THK", "k_THK", "v_THV")
-    ]
+    isolated_grads = [torch.zeros_like(inputs[name]) for name in _MAIN_INPUTS]
     start = 0
     for length in lengths:
         doc_inputs = {
@@ -226,7 +260,7 @@ def test_packed_documents_match_isolated_forward_and_backward() -> None:
         isolated.append(doc)
         doc_grads = torch.autograd.grad(
             doc,
-            (doc_inputs["q_THK"], doc_inputs["k_THK"], doc_inputs["v_THV"]),
+            tuple(doc_inputs[name] for name in _MAIN_INPUTS),
             grad[start : start + length],
         )
         for accumulated, doc_grad in zip(isolated_grads, doc_grads, strict=True):
@@ -282,31 +316,35 @@ def test_indexer_loss_matches_independent_kl_and_preserves_main_gradients() -> N
         AuxLoss.group_acc, clear=True
     ):
         inputs, config = _random_sparse_inputs([8], topk=3)
-        for name in ("idx_q_TIE", "idx_k_TE", "idx_w_TI"):
+        for name in _INDEXER_INPUTS:
             inputs[name].requires_grad_()
-        config.aux_loss = KimiIndexerLoss.Config(
-            coeff=0.01, num_heads=2, reduce_mesh="loss"
+        config.aux_loss = SparseIndexerLoss.Config(
+            coeff=0.01,
+            reduce_mesh="loss",
+            softmax_scale=0.173,
+            num_heads=2,
+            compress_ratio=1,
         )
-        attention = config.build().train()
+        attention = _build_sparse_attention(config).train()
         denominator = torch.tensor(8.0)
         actual = attention(**inputs, scale=0.173, aux_loss_denominator=denominator)
+        expanded = _expanded_inputs(inputs, attention.wkv_b.weight)
         expected = _reference_sparse_attention(
-            **inputs, topk=3, scale=0.173, lengths=[8]
+            **expanded, topk=3, scale=0.173, lengths=[8]
         )
-        expected_kl = _reference_indexer_kl(**inputs, topk=3, scale=0.173, lengths=[8])
+        expected_kl = _reference_indexer_kl(
+            **expanded, topk=3, scale=0.173, lengths=[8]
+        )
 
         grad = torch.randn_like(actual)
-        actual_grads = torch.autograd.grad(
-            actual, tuple(inputs.values()), grad, allow_unused=True
-        )
+        main_inputs = tuple(inputs[name] for name in _MAIN_INPUTS)
+        indexer_inputs = tuple(inputs[name] for name in _INDEXER_INPUTS)
+        actual_grads = torch.autograd.grad(actual, main_inputs + indexer_inputs, grad)
         expected_main_grads = torch.autograd.grad(
-            expected,
-            (inputs["q_THK"], inputs["k_THK"], inputs["v_THV"]),
-            grad,
+            expected, main_inputs, grad, retain_graph=True
         )
         expected_idx_grads = torch.autograd.grad(
-            expected_kl * (0.01 / denominator),
-            (inputs["idx_q_TIE"], inputs["idx_k_TE"], inputs["idx_w_TI"]),
+            expected_kl * (0.01 / denominator), indexer_inputs
         )
 
         torch.testing.assert_close(actual, expected)
@@ -330,12 +368,16 @@ def test_indexer_loss_ignores_padding_and_eval_and_resets_at_step() -> None:
         AuxLoss.group_acc, clear=True
     ):
         inputs, config = _random_sparse_inputs([3, 2], topk=2)
-        for name in ("idx_q_TIE", "idx_k_TE", "idx_w_TI"):
+        for name in _INDEXER_INPUTS:
             inputs[name].requires_grad_()
-        config.aux_loss = KimiIndexerLoss.Config(
-            coeff=0.01, num_heads=2, reduce_mesh="loss"
+        config.aux_loss = SparseIndexerLoss.Config(
+            coeff=0.01,
+            reduce_mesh="loss",
+            softmax_scale=0.173,
+            num_heads=2,
+            compress_ratio=1,
         )
-        attention = config.build().train()
+        attention = _build_sparse_attention(config).train()
         padding_mask = torch.tensor([False, False, False, True, True])
         positions = torch.cat([torch.arange(3), torch.arange(2)]).int()
         metadata = config.build_attention_metadata(
@@ -350,7 +392,7 @@ def test_indexer_loss_ignores_padding_and_eval_and_resets_at_step() -> None:
             aux_loss_denominator=denominator,
         )
         expected_kl = _reference_indexer_kl(
-            **inputs,
+            **_expanded_inputs(inputs, attention.wkv_b.weight),
             topk=2,
             scale=0.173,
             lengths=[3, 2],
@@ -395,7 +437,7 @@ def test_indexer_loss_ignores_padding_and_eval_and_resets_at_step() -> None:
             torch.zeros_like(attention.aux_loss.instance_acc),
         )
         torch.testing.assert_close(
-            AuxLoss.group_acc[("loss", "kimi_indexer_loss")], metric_before_eval
+            AuxLoss.group_acc[("loss", "sparse_indexer_loss")], metric_before_eval
         )
 
 
@@ -454,7 +496,7 @@ def test_debug_recipe_selects_the_dsa_flavor() -> None:
     ]
     assert len(dsa_layers) == 5
     for attention in dsa_layers:
-        assert attention.inner_attention.inner_attention.aux_loss is not None
+        assert attention.inner_attention.aux_loss is not None
 
 
 def _one_layer_dsa_model_config(*, dsa: bool):
@@ -622,7 +664,7 @@ def test_zero_indexer_loss_coefficient_disables_kl() -> None:
     )
     attention = attention_config.build().train()
     attention.init_states()
-    assert attention.inner_attention.inner_attention.aux_loss is None
+    assert attention.inner_attention.aux_loss is None
 
     x_TD = torch.randn(8, config.dim, requires_grad=True)
     output = attention(x_TD)

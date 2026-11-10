@@ -6,13 +6,14 @@ with Gated DeepSeek Sparse Attention (DSA) at the same layer positions. See
 
 This package owns only what K3.1 adds:
 
-- `dsa.py`: the DSA indexer, sparse attention over the selected tokens, and
-  the indexer loss;
+- `dsa.py`: the DSA indexer and absorbed MLA over the selected tokens;
 - `model.py`: `KimiK31Model`, which registers the indexer-loss hook;
 - `flavors.py`: the `debugmodel` and `Kimi-K3.1-Pro` flavors.
 
 KDA, LatentMoE, the MoonViT-V2 vision encoder, sharding and parallelization
-come from `torchtitan/models/kimi_k3/`.
+come from `torchtitan/models/kimi_k3/`. Top-k selection (`Indexer.select`) and
+the indexer loss (`SparseIndexerLoss`) come from
+`torchtitan/models/deepseek_v4/compressor.py`, with compression ratio 1.
 
 ## Architecture
 
@@ -47,13 +48,18 @@ gates for the same config.
 
 The indexer loss is the DeepSeek-V3.2 sparse-stage KL: the main attention
 probabilities on the selected tokens, summed over heads and normalized, are
-the target for the indexer scores. The indexer reads detached inputs, so it is
-trained only by this loss. `build_model_config(..., indexer_loss_coeff=...)`
-sets its weight (default 0.01; 0 disables it).
+the target for the indexer scores. The probabilities are rebuilt from the
+main attention's LSE. The indexer reads detached inputs, so it is trained
+only by this loss. `build_model_config(..., indexer_loss_coeff=...)` sets its
+weight (default 0.01; 0 disables it).
 
-The current sparse attention is an eager reference that gathers per-head K/V
-for every selected token, so it only fits small sequence lengths. Top-k
-selection uses the fused Attention Gym indexer on SM90 or newer GPUs.
+Sparse attention runs MLA in its absorbed form: each query head absorbs its
+key up-projection, all heads attend one shared 576-channel latent key that also
+serves as the value, and the first 512 output channels are up-projected per
+head. It runs in eager PyTorch and gathers a `[tokens, 2048, 576]` key tensor,
+so memory grows linearly with sequence length. Attention Gym `gather_attn` does
+not compile in reasonable time for this shape on Hopper. Top-k selection uses
+the fused Attention Gym indexer on SM90 or newer GPUs.
 
 ## Supported Parallelisms
 
