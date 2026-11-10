@@ -9,12 +9,16 @@ from dataclasses import dataclass
 from torchtitan.models.common.aux_loss import register_aux_loss_zero_hook
 from torchtitan.models.kimi_k3.model import KimiK3Model
 
+from .state_dict_adapter import KimiK31StateDictAdapter
+
 
 __all__ = ["KimiK31Model"]
 
 
 class KimiK31Model(KimiK3Model):
     """Kimi K3 with Gated DSA in place of the full-attention MLA layers."""
+
+    state_dict_adapter_cls = KimiK31StateDictAdapter
 
     @dataclass(kw_only=True, slots=True)
     class Config(KimiK3Model.Config):

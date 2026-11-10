@@ -22,4 +22,5 @@ Only single-device runs have been tested.
 
 ## Numerical Parity
 
-Hugging Face checkpoint loading is not implemented yet.
+`KimiK31StateDictAdapter` maps the released Hugging Face checkpoint, including
+the indexer weights.
