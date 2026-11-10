@@ -65,10 +65,6 @@ class KimiDSAIndexer(Module):
         k_norm: LayerNorm.Config
         weights_proj: Linear.Config
 
-        def __post_init__(self) -> None:
-            if self.index_num_heads <= 0 or self.index_head_dim <= 0:
-                raise ValueError("Indexer head count and dimension must be positive.")
-
     def __init__(self, config: Config) -> None:
         super().__init__()
         self.index_num_heads = config.index_num_heads
@@ -88,7 +84,6 @@ class KimiDSAIndexer(Module):
         )
         idx_k_TE = self.wk(x_TD)
         remat.recompute_needs_tensor(idx_k_TE)
-        # The released parameters are BF16; vLLM evaluates this norm in FP32.
         idx_k_TE = F.layer_norm(
             idx_k_TE.float(),
             (self.index_head_dim,),
@@ -117,12 +112,6 @@ class KimiSparseAttention(InnerAttention):
         wkv_b: Linear.Config
         index_topk: int
         aux_loss: SparseIndexerLoss.Config | None = None
-
-        def __post_init__(self) -> None:
-            if self.index_topk <= 0:
-                raise ValueError("index_topk must be positive.")
-            if self.aux_loss is not None and self.aux_loss.compress_ratio != 1:
-                raise ValueError("Kimi DSA selects uncompressed tokens.")
 
         @property
         def is_full_attention(self) -> bool:
@@ -164,22 +153,18 @@ class KimiSparseAttention(InnerAttention):
         idx_q_TIE: torch.Tensor,
         idx_k_TE: torch.Tensor,
         idx_w_TI: torch.Tensor,
-        attention_metadata: VarlenAttentionMetadata | None = None,
+        attention_metadata: VarlenAttentionMetadata,
         scale: float,
         aux_loss_denominator: torch.Tensor | None = None,
         padding_mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         aux_loss = self.aux_loss if self.training else None
-        cu_seqlens = None if attention_metadata is None else attention_metadata.cu_seq_q
+        cu_seqlens = attention_metadata.cu_seq_q
         topk_indices_TS, topk_scores_TS = Indexer.select(
             idx_q_TIE,
             idx_k_TE,
             idx_w_TI,
-            max_seqlen=(
-                q_THK.shape[0]
-                if attention_metadata is None
-                else attention_metadata.max_k
-            ),
+            max_seqlen=attention_metadata.max_k,
             ratio=1,
             topk=self.index_topk,
             cu_seqlens=cu_seqlens,
@@ -223,9 +208,7 @@ class KimiSparseAttention(InnerAttention):
         )
         out_THV = torch.einsum("thl,hvl->thv", out_THL, w_uv_HVL)
         if aux_loss is not None:
-            assert topk_scores_TS is not None
-            if aux_loss_denominator is None:
-                raise RuntimeError("SparseIndexerLoss requires aux_loss_denominator.")
+            assert topk_scores_TS is not None and aux_loss_denominator is not None
             out_THV = aux_loss(
                 q_THG.detach(),
                 kv_TG.detach(),
@@ -250,11 +233,6 @@ class KimiDSAAttention(KimiMLAAttention):
 
         def __post_init__(self) -> None:
             Attention.Config.__post_init__(self)
-            if not isinstance(self.inner_attention, KimiSparseAttention.Config):
-                raise ValueError(
-                    "KimiDSAAttention requires a KimiSparseAttention.Config, "
-                    f"but got {type(self.inner_attention).__qualname__}."
-                )
 
         def flops_per_token(self, seq_len: int) -> int:
             from torchtitan.models.common.flops import (
@@ -279,7 +257,7 @@ class KimiDSAAttention(KimiMLAAttention):
     def forward(  # pyrefly: ignore[bad-override]
         self,
         x_TD: torch.Tensor,
-        attention_metadata: VarlenAttentionMetadata | None = None,
+        attention_metadata: VarlenAttentionMetadata,
         positions: torch.Tensor | None = None,
         *,
         aux_loss_denominator: torch.Tensor | None = None,

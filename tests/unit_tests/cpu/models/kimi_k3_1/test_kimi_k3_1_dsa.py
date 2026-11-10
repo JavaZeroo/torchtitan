@@ -20,174 +20,96 @@ from torchtitan.models.kimi_k3_1.dsa import KimiSparseAttention
 from torchtitan.models.kimi_k3_1.flavors import _with_dsa
 
 
-def _linear(in_features: int, out_features: int) -> Linear.Config:
-    return Linear.Config(in_features=in_features, out_features=out_features)
-
-
-def _reference_sparse_attention(
-    q_THK: torch.Tensor,
-    k_THK: torch.Tensor,
-    v_THV: torch.Tensor,
-    idx_q_TIE: torch.Tensor,
-    idx_k_TE: torch.Tensor,
-    idx_w_TI: torch.Tensor,
+def _reference(
+    q_THK,
+    k_THK,
+    v_THV,
+    idx_q_TIE,
+    idx_k_TE,
+    idx_w_TI,
     *,
-    topk: int,
-    scale: float,
-    lengths: list[int],
-) -> torch.Tensor:
-    outputs_THV = []
+    topk,
+    scale,
+    lengths,
+    padding_mask
+):
+    """Per-token sparse attention outputs and the summed indexer KL."""
+    outputs_THV, losses = [], []
     start = 0
     for length in lengths:
         for local_t in range(length):
             token = start + local_t
-            candidates = torch.arange(start, token + 1, device=q_THK.device)
+            candidates = torch.arange(start, token + 1)
             dots_IC = torch.einsum("ie,ce->ic", idx_q_TIE[token], idx_k_TE[candidates])
             scores_C = (dots_IC.relu() * idx_w_TI[token, :, None]).sum(dim=0)
-            selected = candidates[scores_C.topk(min(topk, local_t + 1)).indices]
+            scores_S, slots_S = scores_C.topk(min(topk, local_t + 1))
+            selected = candidates[slots_S]
             logits_HS = (
                 torch.einsum("hk,shk->hs", q_THK[token], k_THK[selected]) * scale
             )
             probs_HS = logits_HS.softmax(dim=-1)
             outputs_THV.append(torch.einsum("hs,shv->hv", probs_HS, v_THV[selected]))
+            if not padding_mask[token]:
+                teacher_S = probs_HS.detach().sum(dim=0)
+                teacher_S = teacher_S / teacher_S.sum()
+                student_log_S = scores_S.log_softmax(dim=-1)
+                losses.append((teacher_S * (teacher_S.log() - student_log_S)).sum())
         start += length
-    return torch.stack(outputs_THV)
-
-
-def _random_sparse_inputs(
-    lengths: list[int], *, topk: int
-) -> tuple[dict[str, torch.Tensor], KimiSparseAttention.Config]:
-    num_tokens = sum(lengths)
-    num_heads, nope_dim, shared_dim, value_dim, latent_dim = 2, 4, 2, 5, 14
-    index_heads, index_dim = 3, 8
-
-    def tensor(*shape: int, requires_grad: bool = False) -> torch.Tensor:
-        return torch.randn(
-            *shape,
-            dtype=torch.float64,
-            requires_grad=requires_grad,
-        )
-
-    inputs = {
-        "q_THK": tensor(
-            num_tokens, num_heads, nope_dim + shared_dim, requires_grad=True
-        ),
-        "kv_c_normed_TL": tensor(num_tokens, latent_dim, requires_grad=True),
-        "k_shared_TR": tensor(num_tokens, shared_dim, requires_grad=True),
-        "idx_q_TIE": tensor(num_tokens, index_heads, index_dim),
-        "idx_k_TE": tensor(num_tokens, index_dim).abs(),
-        "idx_w_TI": tensor(num_tokens, index_heads),
-    }
-    inputs["idx_q_TIE"][:, 0].abs_()
-    config = KimiSparseAttention.Config(
-        wkv_b=_linear(latent_dim, num_heads * (nope_dim + value_dim)),
-        index_topk=topk,
-    )
-    return inputs, config
-
-
-def _build_sparse_attention(config: KimiSparseAttention.Config) -> KimiSparseAttention:
-    attention = config.build()
-    attention.wkv_b.double()
-    with torch.no_grad():
-        attention.wkv_b.weight.normal_()
-    return attention
-
-
-def _expanded_inputs(
-    inputs: dict[str, torch.Tensor], wkv_b_weight: torch.Tensor
-) -> dict[str, torch.Tensor]:
-    q_THK = inputs["q_THK"]
-    kv_THP = F.linear(inputs["kv_c_normed_TL"], wkv_b_weight).unflatten(
-        -1, (q_THK.shape[1], -1)
-    )
-    k_THK, v_THV = materialize_mla_kv(q_THK, kv_THP, inputs["k_shared_TR"])
-    expanded = {
-        name: value
-        for name, value in inputs.items()
-        if name not in ("kv_c_normed_TL", "k_shared_TR")
-    }
-    return {**expanded, "k_THK": k_THK, "v_THV": v_THV}
-
-
-_MAIN_INPUTS = ("q_THK", "kv_c_normed_TL", "k_shared_TR")
-_INDEXER_INPUTS = ("idx_q_TIE", "idx_k_TE", "idx_w_TI")
-
-
-def _reference_indexer_kl(
-    q_THK: torch.Tensor,
-    k_THK: torch.Tensor,
-    v_THV: torch.Tensor,
-    idx_q_TIE: torch.Tensor,
-    idx_k_TE: torch.Tensor,
-    idx_w_TI: torch.Tensor,
-    *,
-    topk: int,
-    scale: float,
-    lengths: list[int],
-    padding_mask: torch.Tensor | None = None,
-) -> torch.Tensor:
-    del v_THV
-    losses = []
-    start = 0
-    for length in lengths:
-        for local_t in range(length):
-            token = start + local_t
-            if padding_mask is not None and padding_mask[token]:
-                continue
-            candidates = torch.arange(start, token + 1, device=q_THK.device)
-            dots_IC = torch.einsum("ie,ce->ic", idx_q_TIE[token], idx_k_TE[candidates])
-            scores_C = (dots_IC.relu() * idx_w_TI[token, :, None]).sum(dim=0)
-            topk_result = scores_C.topk(min(topk, local_t + 1))
-            selected = candidates[topk_result.indices]
-            logits_HS = (
-                torch.einsum("hk,shk->hs", q_THK[token], k_THK[selected]) * scale
-            )
-            teacher_S = logits_HS.softmax(dim=-1).sum(dim=0).detach()
-            teacher_S = teacher_S / q_THK.shape[1]
-            teacher_S = teacher_S / teacher_S.sum()
-            student_log_S = topk_result.values.log_softmax(dim=-1)
-            losses.append((teacher_S * (teacher_S.log() - student_log_S)).sum())
-        start += length
-    return torch.stack(losses).sum()
+    return torch.stack(outputs_THV), torch.stack(losses).sum()
 
 
 def test_sparse_attention_and_indexer_loss_match_oracle() -> None:
     torch.manual_seed(19)
     lengths = [3, 5, 2]
     padding_mask = torch.tensor([False] * 8 + [True, True])
+    q_THK, kv_c_normed_TL, k_shared_TR, idx_q_TIE, idx_k_TE, idx_w_TI = (
+        torch.randn(*shape, dtype=torch.float64)
+        for shape in ((10, 2, 6), (10, 14), (10, 2), (10, 3, 8), (10, 8), (10, 3))
+    )
+    idx_k_TE.abs_()
+    idx_q_TIE[:, 0].abs_()
+    main = (q_THK, kv_c_normed_TL, k_shared_TR)
+    indexer = (idx_q_TIE, idx_k_TE, idx_w_TI)
+    for tensor in main + indexer:
+        tensor.requires_grad_()
     with patch.dict(AuxLoss._group_counts, clear=True), patch.dict(
         AuxLoss.group_acc, clear=True
     ):
-        inputs, config = _random_sparse_inputs(lengths, topk=3)
-        for name in _INDEXER_INPUTS:
-            inputs[name].requires_grad_()
-        config.aux_loss = SparseIndexerLoss.Config(
-            coeff=0.01,
-            reduce_mesh="loss",
-            softmax_scale=0.173,
-            num_heads=2,
-            compress_ratio=1,
+        config = KimiSparseAttention.Config(
+            wkv_b=Linear.Config(in_features=14, out_features=2 * (4 + 5)),
+            index_topk=3,
+            aux_loss=SparseIndexerLoss.Config(
+                coeff=0.01,
+                reduce_mesh="loss",
+                softmax_scale=0.173,
+                num_heads=2,
+                compress_ratio=1,
+            ),
         )
-        attention = _build_sparse_attention(config).train()
+        attention = config.build().train()
+        attention.wkv_b.double()
+        with torch.no_grad():
+            attention.wkv_b.weight.normal_()
         positions = torch.cat([torch.arange(length) for length in lengths]).int()
-        metadata = config.build_attention_metadata(
-            positions, padding_mask=padding_mask, max_context_length=sum(lengths)
-        )
-        denominator = torch.tensor(8.0)
         actual = attention(
-            **inputs,
-            attention_metadata=metadata,
+            *main,
+            idx_q_TIE=idx_q_TIE,
+            idx_k_TE=idx_k_TE,
+            idx_w_TI=idx_w_TI,
+            attention_metadata=config.build_attention_metadata(
+                positions, padding_mask=padding_mask, max_context_length=10
+            ),
             scale=0.173,
-            aux_loss_denominator=denominator,
+            aux_loss_denominator=torch.tensor(8.0),
             padding_mask=padding_mask,
         )
-        expanded = _expanded_inputs(inputs, attention.wkv_b.weight)
-        expected = _reference_sparse_attention(
-            **expanded, topk=3, scale=0.173, lengths=lengths
-        )
-        expected_kl = _reference_indexer_kl(
-            **expanded,
+        kv_THP = F.linear(kv_c_normed_TL, attention.wkv_b.weight).unflatten(-1, (2, -1))
+        k_THK, v_THV = materialize_mla_kv(q_THK, kv_THP, k_shared_TR)
+        expected, expected_kl = _reference(
+            q_THK,
+            k_THK,
+            v_THV,
+            *indexer,
             topk=3,
             scale=0.173,
             lengths=lengths,
@@ -195,15 +117,11 @@ def test_sparse_attention_and_indexer_loss_match_oracle() -> None:
         )
 
         grad = torch.randn_like(actual)
-        main_inputs = (
-            *(inputs[name] for name in _MAIN_INPUTS),
-            attention.wkv_b.weight,
-        )
-        indexer_inputs = tuple(inputs[name] for name in _INDEXER_INPUTS)
-        actual_grads = torch.autograd.grad(actual, main_inputs + indexer_inputs, grad)
+        main += (attention.wkv_b.weight,)
+        actual_grads = torch.autograd.grad(actual, main + indexer, grad)
         expected_grads = torch.autograd.grad(
-            expected, main_inputs, grad, retain_graph=True
-        ) + torch.autograd.grad(expected_kl * (0.01 / denominator), indexer_inputs)
+            expected, main, grad, retain_graph=True
+        ) + torch.autograd.grad(expected_kl * (0.01 / 8.0), indexer)
 
         torch.testing.assert_close(actual, expected)
         for actual_grad, expected_grad in zip(
@@ -212,13 +130,13 @@ def test_sparse_attention_and_indexer_loss_match_oracle() -> None:
             torch.testing.assert_close(actual_grad, expected_grad)
         assert attention.aux_loss is not None
         torch.testing.assert_close(
-            attention.aux_loss.instance_acc,
-            (expected_kl.detach() / denominator).float(),
+            attention.aux_loss.instance_acc, (expected_kl.detach() / 8.0).float()
         )
 
 
-def _one_layer_k3_config():
-    return _kimi_k3_config(
+def test_full_causal_dsa_model_matches_dense_k3_mla() -> None:
+    torch.manual_seed(31)
+    dense_config = _kimi_k3_config(
         max_context_length=8,
         dim=8,
         vocab_size=16,
@@ -252,11 +170,6 @@ def _one_layer_k3_config():
         attn_backend="flex",
         parallelism=ParallelismConfig(),
     )
-
-
-def test_full_causal_dsa_model_matches_dense_k3_mla() -> None:
-    torch.manual_seed(31)
-    dense_config = _one_layer_k3_config()
     dsa_config = _with_dsa(
         dense_config,
         index_topk=16,

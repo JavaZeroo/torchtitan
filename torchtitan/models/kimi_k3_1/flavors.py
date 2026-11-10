@@ -9,8 +9,6 @@
 from dataclasses import fields
 from typing import Any
 
-import torch.nn as nn
-
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.config.transform import (
     ModelConfigConverter,
@@ -41,61 +39,6 @@ def _fields_except(config: Any, name: str) -> dict[str, Any]:
     }
 
 
-def _dsa_config(
-    mla: KimiMLAAttention.Config,
-    *,
-    index_topk: int,
-    index_num_heads: int,
-    index_head_dim: int,
-    indexer_loss_coeff: float,
-) -> KimiDSAAttention.Config:
-    """Kimi K3 MLA projections and sharding, plus a replicated DSA indexer."""
-    return KimiDSAAttention.Config(
-        **_fields_except(mla, "inner_attention"),
-        inner_attention=KimiSparseAttention.Config(
-            wkv_b=mla.inner_attention.wkv_b,
-            index_topk=index_topk,
-            aux_loss=(
-                None
-                if indexer_loss_coeff == 0
-                else SparseIndexerLoss.Config(
-                    coeff=indexer_loss_coeff,
-                    reduce_mesh="loss",
-                    softmax_scale=mla.softmax_scale,
-                    num_heads=mla.n_heads,
-                    compress_ratio=1,
-                )
-            ),
-            sharding_config=mla.inner_attention.sharding_config,
-        ),
-        indexer=KimiDSAIndexer.Config(
-            index_num_heads=index_num_heads,
-            index_head_dim=index_head_dim,
-            wq_b=_linear(
-                mla.wq_a.out_features,
-                index_num_heads * index_head_dim,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-            wk=_linear(
-                mla.dim,
-                index_head_dim,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-            k_norm=LayerNorm.Config(
-                normalized_shape=index_head_dim,
-                eps=1e-5,
-                param_init={"weight": nn.init.ones_, "bias": nn.init.zeros_},
-                sharding_config=replicated_state_sharding_config("weight", "bias"),
-            ),
-            weights_proj=_linear(
-                mla.dim,
-                index_num_heads,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-        ),
-    )
-
-
 def _with_dsa(
     config: KimiK3Model.Config,
     *,
@@ -105,23 +48,58 @@ def _with_dsa(
     indexer_loss_coeff: float,
 ) -> KimiK31Model.Config:
     """Replace every full-attention MLA layer of a Kimi K3 config with Gated DSA."""
-    layers = [
-        (
-            KimiK31TransformerBlock.Config(
-                **_fields_except(layer, "attention"),
-                attention=_dsa_config(
-                    layer.attention,
+    layers = []
+    for layer in config.layers:
+        mla = layer.attention
+        if isinstance(mla, KimiMLAAttention.Config):
+            dsa = KimiDSAAttention.Config(
+                **_fields_except(mla, "inner_attention"),
+                inner_attention=KimiSparseAttention.Config(
+                    wkv_b=mla.inner_attention.wkv_b,
                     index_topk=index_topk,
+                    aux_loss=(
+                        None
+                        if indexer_loss_coeff == 0
+                        else SparseIndexerLoss.Config(
+                            coeff=indexer_loss_coeff,
+                            reduce_mesh="loss",
+                            softmax_scale=mla.softmax_scale,
+                            num_heads=mla.n_heads,
+                            compress_ratio=1,
+                        )
+                    ),
+                    sharding_config=mla.inner_attention.sharding_config,
+                ),
+                indexer=KimiDSAIndexer.Config(
                     index_num_heads=index_num_heads,
                     index_head_dim=index_head_dim,
-                    indexer_loss_coeff=indexer_loss_coeff,
+                    wq_b=_linear(
+                        mla.wq_a.out_features,
+                        index_num_heads * index_head_dim,
+                        sharding_config=replicated_state_sharding_config("weight"),
+                    ),
+                    wk=_linear(
+                        mla.dim,
+                        index_head_dim,
+                        sharding_config=replicated_state_sharding_config("weight"),
+                    ),
+                    k_norm=LayerNorm.Config(
+                        normalized_shape=index_head_dim,
+                        sharding_config=replicated_state_sharding_config(
+                            "weight", "bias"
+                        ),
+                    ),
+                    weights_proj=_linear(
+                        mla.dim,
+                        index_num_heads,
+                        sharding_config=replicated_state_sharding_config("weight"),
+                    ),
                 ),
             )
-            if isinstance(layer.attention, KimiMLAAttention.Config)
-            else layer
-        )
-        for layer in config.layers
-    ]
+            layer = KimiK31TransformerBlock.Config(
+                **_fields_except(layer, "attention"), attention=dsa
+            )
+        layers.append(layer)
     return KimiK31Model.Config(**_fields_except(config, "layers"), layers=layers)
 
 

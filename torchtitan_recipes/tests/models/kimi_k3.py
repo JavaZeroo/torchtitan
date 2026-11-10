@@ -87,12 +87,6 @@ def kimi_k3_debugmodel(
         attn_backend=attn_backend,
         parallelism=parallelism,
     )
-    return _debugmodel_trainer_config(model_config, parallelism=parallelism)
-
-
-def _debugmodel_trainer_config(
-    model_config: KimiK3Model.Config, *, parallelism: ParallelismConfig
-) -> Trainer.Config:
     return _KimiK3TrainerConfig(
         loss=ChunkedLossWrapper.Config(
             loss_fn=CrossEntropyLoss.Config(
