@@ -20,13 +20,10 @@ from torchtitan.models.common.attention import (
     local_head_split,
     VarlenAttentionMetadata,
 )
+from torchtitan.models.common.attn_gym import AuxRequest, gather_attn
 from torchtitan.models.common.linear import Linear, maybe_gather_tp_input
 from torchtitan.models.common.nn_modules import LayerNorm
-from torchtitan.models.deepseek_v4.compressor import (
-    compressed_gather_indices,
-    Indexer,
-    SparseIndexerLoss,
-)
+from torchtitan.models.deepseek_v4.compressor import Indexer, SparseIndexerLoss
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 
 __all__ = [
@@ -131,7 +128,7 @@ class KimiDSAIndexer(Module):
 
 
 class KimiSparseAttention(InnerAttention):
-    """Eager absorbed MLA over indexer-selected tokens.
+    """Absorbed MLA over indexer-selected tokens, run by Attention Gym.
 
     Each query head absorbs its key up-projection, so all heads attend one
     shared latent ``[kv_c_normed, k_shared]`` that is also the value. The
@@ -209,34 +206,32 @@ class KimiSparseAttention(InnerAttention):
         )
         q_THG = torch.cat((q_latent_THL, q_shared_THR), dim=-1)
         kv_TG = torch.cat((kv_c_normed_TL, k_shared_TR), dim=-1)
-        # TODO: replace with the Attention Gym kernel.
-        kv_TSG = kv_TG[compressed_gather_indices(topk_indices_TS, cu_seqlens, 1)]
-        logits_THS = (
-            torch.einsum(
-                "thg,tsg->ths",  # codespell:ignore ths
-                q_THG,
-                kv_TSG,
-            ).to(torch.promote_types(q_THG.dtype, torch.float32))
-            * scale
+        out_1HTG, aux = gather_attn(
+            q_THG.transpose(0, 1).unsqueeze(0),
+            None,
+            kv_TG[None, None],
+            topk_indices_TS.unsqueeze(0),
+            sliding_window_size=0,
+            cu_seqlens=cu_seqlens,
+            cu_seqlens_k=cu_seqlens,
+            scale=scale,
+            impl="fused" if q_THK.device.type == "cuda" else "reference",
+            return_aux=AuxRequest(lse=aux_loss is not None),
         )
-        logits_THS = logits_THS.masked_fill(
-            (topk_indices_TS < 0).unsqueeze(1), -torch.inf
-        )
-        probs_THS = logits_THS.softmax(dim=-1).to(q_THG.dtype)
-        out_THL = torch.einsum(
-            "ths,tsl->thl",  # codespell:ignore ths
-            probs_THS,
-            kv_TSG[..., :latent_dim],
-        )
+        out_THL = out_1HTG.squeeze(0).transpose(0, 1)[..., :latent_dim]
         out_THV = torch.einsum("thl,hvl->thv", out_THL, w_uv_HVL)
         if aux_loss is not None:
-            assert topk_scores_TS is not None and aux_loss_denominator is not None
+            assert (
+                topk_scores_TS is not None
+                and aux_loss_denominator is not None
+                and aux.lse is not None
+            )
             out_THV = aux_loss(
                 q_THG.detach(),
                 kv_TG.detach(),
                 topk_indices_TS,
                 topk_scores_TS,
-                logits_THS.detach().logsumexp(dim=-1),
+                aux.lse.squeeze(0).transpose(0, 1).detach(),
                 cu_seqlens,
                 carrier=out_THV,
                 denominator=aux_loss_denominator,
