@@ -9,6 +9,7 @@
 from dataclasses import dataclass
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
 import torch_remat as remat
 
@@ -30,6 +31,8 @@ from torchtitan.models.deepseek_v4.compressor import (
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 
 __all__ = [
+    "AbsorbedKVProjection",
+    "FP32LayerNorm",
     "KimiDSAAttention",
     "KimiDSAIndexer",
     "KimiSparseAttention",
@@ -53,6 +56,59 @@ __all__ = [
 # J = flattened projection channels
 
 
+class FP32LayerNorm(LayerNorm):
+    """LayerNorm computed in fp32 and cast back to the input dtype."""
+
+    @dataclass(kw_only=True, slots=True)
+    class Config(LayerNorm.Config):
+        pass
+
+    def forward(self, input: torch.Tensor) -> torch.Tensor:
+        return F.layer_norm(
+            input.float(),
+            self.normalized_shape,
+            self.weight.float(),
+            self.bias.float(),
+            self.eps,
+        ).to(input.dtype)
+
+
+class AbsorbedKVProjection(Module):
+    """Per-head MLA key and value up-projection weights.
+
+    The weight has the layout of the MLA ``wkv_b`` linear. ``forward`` returns
+    it split per head, for a caller that absorbs the key part into the query
+    and applies the value part after attention.
+    """
+
+    @dataclass(kw_only=True, slots=True)
+    class Config(Module.Config):
+        kv_lora_rank: int
+        num_heads: int
+        qk_nope_head_dim: int
+        v_head_dim: int
+
+    def __init__(self, config: Config) -> None:
+        super().__init__()
+        self.qk_nope_head_dim = config.qk_nope_head_dim
+        self.v_head_dim = config.v_head_dim
+        self.weight = nn.Parameter(
+            torch.empty(
+                config.num_heads * (config.qk_nope_head_dim + config.v_head_dim),
+                config.kv_lora_rank,
+            )
+        )
+
+    def forward(self) -> tuple[torch.Tensor, torch.Tensor]:
+        weight_HPL = self.weight.unflatten(
+            0, (-1, self.qk_nope_head_dim + self.v_head_dim)
+        )
+        w_uk_HNL, w_uv_HVL = weight_HPL.split(
+            [self.qk_nope_head_dim, self.v_head_dim], dim=1
+        )
+        return w_uk_HNL, w_uv_HVL
+
+
 class KimiDSAIndexer(Module):
     """Project normalized low-rank queries and raw inputs into DSA scores."""
 
@@ -62,7 +118,7 @@ class KimiDSAIndexer(Module):
         index_head_dim: int
         wq_b: Linear.Config
         wk: Linear.Config
-        k_norm: LayerNorm.Config
+        k_norm: FP32LayerNorm.Config
         weights_proj: Linear.Config
 
     def __init__(self, config: Config) -> None:
@@ -84,13 +140,7 @@ class KimiDSAIndexer(Module):
         )
         idx_k_TE = self.wk(x_TD)
         remat.recompute_needs_tensor(idx_k_TE)
-        idx_k_TE = F.layer_norm(
-            idx_k_TE.float(),
-            (self.index_head_dim,),
-            self.k_norm.weight.float(),
-            self.k_norm.bias.float(),
-            self.k_norm.eps,
-        ).to(x_TD.dtype)
+        idx_k_TE = self.k_norm(idx_k_TE)
         idx_w_TI = self.weights_proj(x_TD)
         remat.recompute_needs_tensor(idx_w_TI)
         idx_w_TI = idx_w_TI * (
@@ -109,7 +159,7 @@ class KimiSparseAttention(InnerAttention):
 
     @dataclass(kw_only=True, slots=True)
     class Config(InnerAttention.Config):
-        wkv_b: Linear.Config
+        wkv_b: AbsorbedKVProjection.Config
         index_topk: int
         aux_loss: SparseIndexerLoss.Config | None = None
 
@@ -135,12 +185,6 @@ class KimiSparseAttention(InnerAttention):
     def __init__(self, config: Config) -> None:
         super().__init__()
         self.wkv_b = config.wkv_b.build()
-        if type(self.wkv_b) is not Linear or self.wkv_b.bias is not None:
-            raise ValueError(
-                "KimiSparseAttention reads wkv_b.weight directly, so wkv_b must be "
-                f"a bias-free Linear, but got {type(self.wkv_b).__qualname__} "
-                f"(bias={self.wkv_b.bias is not None})."
-            )
         self.index_topk = config.index_topk
         self.aux_loss = config.aux_loss.build() if config.aux_loss is not None else None
 
@@ -173,10 +217,7 @@ class KimiSparseAttention(InnerAttention):
 
         latent_dim = kv_c_normed_TL.shape[-1]
         nope_dim = q_THK.shape[-1] - k_shared_TR.shape[-1]
-        wkv_b_HPL = self.wkv_b.weight.view(q_THK.shape[1], -1, latent_dim)
-        w_uk_HNL, w_uv_HVL = wkv_b_HPL.split(
-            [nope_dim, wkv_b_HPL.shape[1] - nope_dim], dim=1
-        )
+        w_uk_HNL, w_uv_HVL = self.wkv_b()
         q_nope_THN, q_shared_THR = q_THK.split(
             [nope_dim, k_shared_TR.shape[-1]], dim=-1
         )

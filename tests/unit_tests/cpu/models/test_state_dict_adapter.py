@@ -46,7 +46,7 @@ from torchtitan.models.kimi_k3.flavors import (
     mla_config,
     vision_encoder_config,
 )
-from torchtitan.models.kimi_k3.model import KimiK3Model
+from torchtitan.models.kimi_k3.model import KimiK3Model, KimiK3TransformerBlock
 from torchtitan.models.kimi_k3.state_dict_adapter import KimiK3StateDictAdapter
 from torchtitan.models.llama3 import MODEL_FLAVORS as LLAMA3_MODEL_FLAVORS
 from torchtitan.models.llama3.model import Llama3Model
@@ -170,6 +170,7 @@ def _small_kimi_k3_config(*, has_vision_encoder: bool = True) -> KimiK3Model.Con
         num_layers=2,
         full_attention_layers={1},
         full_attention=partial(mla_config, attn_backend="flex"),
+        full_attention_block_cls=KimiK3TransformerBlock.Config,
         attn_res_block_size=1,
         num_heads=2,
         q_lora_rank=32,

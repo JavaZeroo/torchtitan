@@ -125,7 +125,6 @@ def main() -> None:
         "Kimi-K3.1-Pro",
         parallelism=ParallelismConfig(),
         seq_len=args.seq_len,
-        indexer_loss_coeff=0.0,
     )
     attention_config = config.layers[args.layer].attention
     adapter = KimiK31StateDictAdapter(config, hf_assets_path=None)

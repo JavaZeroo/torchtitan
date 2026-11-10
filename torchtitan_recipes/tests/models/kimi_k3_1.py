@@ -6,6 +6,8 @@
 
 """Kimi K3.1 model configurations used by tests."""
 
+from typing import cast
+
 from torchtitan.components.data.multimodal.mm_datasets import MM_DATASETS
 from torchtitan.components.loss import ChunkedLossWrapper, CrossEntropyLoss
 from torchtitan.components.optim import LRSchedulersContainer, Optim
@@ -16,13 +18,16 @@ from torchtitan.distributed.activation_remat import DefaultActivationRematConfig
 from torchtitan.models.common.config_utils import decoder_vocab_size
 from torchtitan.models.kimi_k3 import KIMI_K3_SPECIAL_TOKENS
 from torchtitan.models.kimi_k3_1 import build_model_config
+from torchtitan.models.kimi_k3_1.dsa import KimiDSAAttention
 from torchtitan.observability.metrics import MetricsProcessor
 from torchtitan.trainer import Trainer
 
 from torchtitan_recipes.tests.models.kimi_k3 import (
+    _blocks_of,
     _dist_muon_optimizer,
     _kimi_k3_multimodal_dataloader,
     _KimiK3TrainerConfig,
+    _OWNED,
 )
 
 
@@ -36,6 +41,7 @@ def kimi_k3_1_debugmodel(
     model_config = build_model_config(
         "debugmodel", seq_len=seq_len, parallelism=parallelism
     )
+    indexer = cast(KimiDSAAttention.Config, model_config.first_full_attention).indexer
     return _KimiK3TrainerConfig(
         loss=ChunkedLossWrapper.Config(
             loss_fn=CrossEntropyLoss.Config(
@@ -53,6 +59,11 @@ def kimi_k3_1_debugmodel(
                 muon_lr=8e-4,
                 adamw_lr=8e-4,
                 parallelism=parallelism,
+                extra_full_attention_shardings={
+                    "indexer.wq_b": _blocks_of(indexer.index_head_dim),
+                    "indexer.wk": _OWNED,
+                    "indexer.weights_proj": _OWNED,
+                },
             ),
             lr_scheduler=LRSchedulersContainer.Config(
                 warmup_steps=2,

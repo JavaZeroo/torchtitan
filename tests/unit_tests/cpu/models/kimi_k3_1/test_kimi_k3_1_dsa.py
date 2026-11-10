@@ -12,9 +12,8 @@ import torch.nn.functional as F
 
 from torchtitan.models.common.attention import materialize_mla_kv
 from torchtitan.models.common.aux_loss import AuxLoss
-from torchtitan.models.common.linear import Linear
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
-from torchtitan.models.kimi_k3_1.dsa import KimiSparseAttention
+from torchtitan.models.kimi_k3_1.dsa import AbsorbedKVProjection, KimiSparseAttention
 
 
 def _reference(
@@ -73,7 +72,9 @@ def test_sparse_attention_and_indexer_loss_match_oracle() -> None:
         AuxLoss.group_acc, clear=True
     ):
         config = KimiSparseAttention.Config(
-            wkv_b=Linear.Config(in_features=14, out_features=2 * (4 + 5)),
+            wkv_b=AbsorbedKVProjection.Config(
+                kv_lora_rank=14, num_heads=2, qk_nope_head_dim=4, v_head_dim=5
+            ),
             index_topk=3,
             aux_loss=SparseIndexerLoss.Config(
                 coeff=0.01,

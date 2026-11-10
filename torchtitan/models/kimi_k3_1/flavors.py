@@ -9,24 +9,31 @@
 from functools import partial
 
 import spmd_types as spmd
+import torch.nn as nn
 
 from torchtitan.config.parallelism import ParallelismConfig
+from torchtitan.models.base.sharding import ShardingConfig
 from torchtitan.models.common.decoder_sharding import (
+    dense_param_placement,
     mla_attention_local_spmd_sharding_config,
-    mla_kv_projection_sharding_config,
     replicated_state_sharding_config,
 )
-from torchtitan.models.common.nn_modules import LayerNorm
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 from torchtitan.models.kimi_k3.flavors import (
     kimi_k3_config,
-    linear,
-    mla_attention_fields,
+    linear_config,
+    mla_attention_config,
     vision_encoder_config,
 )
 
-from .dsa import KimiDSAAttention, KimiDSAIndexer, KimiSparseAttention
-from .model import KimiK31Model
+from .dsa import (
+    AbsorbedKVProjection,
+    FP32LayerNorm,
+    KimiDSAAttention,
+    KimiDSAIndexer,
+    KimiSparseAttention,
+)
+from .model import KimiK31Model, KimiK31TransformerBlock
 
 __all__ = ["build_model_config", "KimiK31Model", "MODEL_FLAVORS"]
 
@@ -46,22 +53,43 @@ def _dsa_config(
     index_head_dim: int,
     indexer_loss_coeff: float,
 ) -> KimiDSAAttention.Config:
-    return KimiDSAAttention.Config(
-        **mla_attention_fields(
-            dim=dim,
-            num_heads=num_heads,
-            q_lora_rank=q_lora_rank,
-            kv_lora_rank=kv_lora_rank,
-            qk_nope_head_dim=qk_nope_head_dim,
-            qk_rope_head_dim=qk_rope_head_dim,
-            v_head_dim=v_head_dim,
-            enable_sp=enable_sp,
+    return mla_attention_config(
+        config_cls=partial(
+            KimiDSAAttention.Config,
+            indexer=KimiDSAIndexer.Config(
+                num_index_heads=num_index_heads,
+                index_head_dim=index_head_dim,
+                wq_b=linear_config(
+                    q_lora_rank,
+                    num_index_heads * index_head_dim,
+                    sharding_config=replicated_state_sharding_config("weight"),
+                ),
+                wk=linear_config(
+                    dim,
+                    index_head_dim,
+                    sharding_config=replicated_state_sharding_config("weight"),
+                ),
+                k_norm=FP32LayerNorm.Config(
+                    normalized_shape=index_head_dim,
+                    sharding_config=replicated_state_sharding_config("weight", "bias"),
+                ),
+                weights_proj=linear_config(
+                    dim,
+                    num_index_heads,
+                    sharding_config=replicated_state_sharding_config("weight"),
+                ),
+            ),
         ),
         inner_attention=KimiSparseAttention.Config(
-            wkv_b=linear(
-                kv_lora_rank,
-                num_heads * (qk_nope_head_dim + v_head_dim),
-                sharding_config=mla_kv_projection_sharding_config(cp=spmd.S(0)),
+            wkv_b=AbsorbedKVProjection.Config(
+                kv_lora_rank=kv_lora_rank,
+                num_heads=num_heads,
+                qk_nope_head_dim=qk_nope_head_dim,
+                v_head_dim=v_head_dim,
+                param_init={"weight": partial(nn.init.trunc_normal_, std=0.02)},
+                sharding_config=ShardingConfig(
+                    state_shardings={"weight": dense_param_placement(tp=spmd.S(0))}
+                ),
             ),
             index_topk=index_topk,
             aux_loss=(
@@ -77,29 +105,14 @@ def _dsa_config(
             ),
             sharding_config=mla_attention_local_spmd_sharding_config(),
         ),
-        indexer=KimiDSAIndexer.Config(
-            num_index_heads=num_index_heads,
-            index_head_dim=index_head_dim,
-            wq_b=linear(
-                q_lora_rank,
-                num_index_heads * index_head_dim,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-            wk=linear(
-                dim,
-                index_head_dim,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-            k_norm=LayerNorm.Config(
-                normalized_shape=index_head_dim,
-                sharding_config=replicated_state_sharding_config("weight", "bias"),
-            ),
-            weights_proj=linear(
-                dim,
-                num_index_heads,
-                sharding_config=replicated_state_sharding_config("weight"),
-            ),
-        ),
+        dim=dim,
+        num_heads=num_heads,
+        q_lora_rank=q_lora_rank,
+        kv_lora_rank=kv_lora_rank,
+        qk_nope_head_dim=qk_nope_head_dim,
+        qk_rope_head_dim=qk_rope_head_dim,
+        v_head_dim=v_head_dim,
+        enable_sp=enable_sp,
     )
 
 
@@ -121,6 +134,7 @@ def _debugmodel(
             index_head_dim=64,
             indexer_loss_coeff=indexer_loss_coeff,
         ),
+        full_attention_block_cls=KimiK31TransformerBlock.Config,
         attn_res_block_size=4,
         num_heads=4,
         q_lora_rank=128,
@@ -168,6 +182,7 @@ def _kimi_k3_1_pro(
             index_head_dim=128,
             indexer_loss_coeff=indexer_loss_coeff,
         ),
+        full_attention_block_cls=KimiK31TransformerBlock.Config,
         attn_res_block_size=12,
         num_heads=96,
         q_lora_rank=1536,
