@@ -52,6 +52,7 @@ from torchtitan.models.kimi_k3 import (
     KimiK3Model,
 )
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
+from torchtitan.models.kimi_k3_1.dsa import KimiDSAAttention
 from torchtitan.observability.metrics import MetricsProcessor
 from torchtitan.trainer import Trainer
 
@@ -180,6 +181,12 @@ def _dist_muon_optimizer(
         "gate": blocks_of(attention.v_head_dim),
         "wo": owned,
     }
+    if isinstance(attention, KimiDSAAttention.Config):
+        attention_shardings |= {
+            "indexer.wq_b": blocks_of(attention.indexer.index_head_dim),
+            "indexer.wk": owned,
+            "indexer.weights_proj": owned,
+        }
     per_kda_head = blocks_of(delta_attention.head_dim)
     # forget_a is the shared low-rank down projection and output_proj mixes
     # heads back into the model dimension, so both are whole-matrix compute.
