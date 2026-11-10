@@ -44,6 +44,7 @@ def _dsa_config(
     index_topk: int,
     num_index_heads: int,
     index_head_dim: int,
+    indexer_loss_coeff: float,
 ) -> KimiDSAAttention.Config:
     return KimiDSAAttention.Config(
         **mla_attention_fields(
@@ -63,12 +64,16 @@ def _dsa_config(
                 sharding_config=mla_kv_projection_sharding_config(cp=spmd.S(0)),
             ),
             index_topk=index_topk,
-            aux_loss=SparseIndexerLoss.Config(
-                coeff=0.01,
-                reduce_mesh="loss",
-                softmax_scale=(qk_nope_head_dim + qk_rope_head_dim) ** -0.5,
-                num_heads=num_heads,
-                compress_ratio=1,
+            aux_loss=(
+                SparseIndexerLoss.Config(
+                    coeff=indexer_loss_coeff,
+                    reduce_mesh="loss",
+                    softmax_scale=(qk_nope_head_dim + qk_rope_head_dim) ** -0.5,
+                    num_heads=num_heads,
+                    compress_ratio=1,
+                )
+                if indexer_loss_coeff > 0
+                else None
             ),
             sharding_config=mla_attention_local_spmd_sharding_config(),
         ),
@@ -98,7 +103,9 @@ def _dsa_config(
     )
 
 
-def _debugmodel(*, seq_len: int, parallelism: ParallelismConfig) -> KimiK31Model.Config:
+def _debugmodel(
+    *, seq_len: int, indexer_loss_coeff: float, parallelism: ParallelismConfig
+) -> KimiK31Model.Config:
     dim = 256
     return kimi_k3_config(
         config_cls=KimiK31Model.Config,
@@ -112,6 +119,7 @@ def _debugmodel(*, seq_len: int, parallelism: ParallelismConfig) -> KimiK31Model
             index_topk=128,
             num_index_heads=4,
             index_head_dim=64,
+            indexer_loss_coeff=indexer_loss_coeff,
         ),
         attn_res_block_size=4,
         num_heads=4,
@@ -143,7 +151,7 @@ def _debugmodel(*, seq_len: int, parallelism: ParallelismConfig) -> KimiK31Model
 
 
 def _kimi_k3_1_pro(
-    *, seq_len: int, parallelism: ParallelismConfig
+    *, seq_len: int, indexer_loss_coeff: float, parallelism: ParallelismConfig
 ) -> KimiK31Model.Config:
     dim = 7168
     return kimi_k3_config(
@@ -158,6 +166,7 @@ def _kimi_k3_1_pro(
             index_topk=2048,
             num_index_heads=32,
             index_head_dim=128,
+            indexer_loss_coeff=indexer_loss_coeff,
         ),
         attn_res_block_size=12,
         num_heads=96,
@@ -199,6 +208,7 @@ def build_model_config(
     *,
     parallelism: ParallelismConfig,
     seq_len: int | None = None,
+    indexer_loss_coeff: float = 0.01,
 ) -> KimiK31Model.Config:
     get_config, max_context_len = MODEL_FLAVORS[flavor]
     context_len = seq_len or max_context_len
@@ -207,4 +217,12 @@ def build_model_config(
             f"Requested seq_len {context_len} exceeds max context length "
             f"{max_context_len} for flavor {flavor}"
         )
-    return get_config(seq_len=context_len, parallelism=parallelism)
+    if indexer_loss_coeff < 0:
+        raise ValueError(
+            f"indexer_loss_coeff must be nonnegative, got {indexer_loss_coeff}."
+        )
+    return get_config(
+        seq_len=context_len,
+        indexer_loss_coeff=indexer_loss_coeff,
+        parallelism=parallelism,
+    )

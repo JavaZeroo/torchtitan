@@ -13,7 +13,8 @@ Each DSA layer keeps the Kimi K3 MLA projections and output gate, and adds an
 indexer with 32 heads of dimension 128 that selects 2048 tokens per query.
 Top-k selection and the indexer loss come from
 `torchtitan/models/deepseek_v4/compressor.py`. The indexer is trained only by
-the indexer loss, with coefficient 0.01.
+the indexer loss. `build_model_config(..., indexer_loss_coeff=...)` sets its
+coefficient (default 0.01); 0 turns the loss off.
 
 ## Supported Parallelisms
 
