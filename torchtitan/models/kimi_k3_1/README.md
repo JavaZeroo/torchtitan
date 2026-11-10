@@ -26,11 +26,3 @@ Only single-device runs have been tested.
 the indexer weights.
 
 No Hugging Face model code is released for K3.1.
-`scripts/checkpoint_conversion/numerical_tests_kimi_k3_1.py` compares one
-released DSA layer (layer 3, 2304 tokens) with a plain PyTorch version of vLLM's
-Kimi K3.1 DSA:
-
-| Precision | Top-k overlap | Output relative L2 |
-| --- | --- | --- |
-| fp32 | 100% | 1.4e-6 |
-| bf16 | 99.97% (lowest row 99.85%) | 8.2e-3 |

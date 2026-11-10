@@ -131,29 +131,6 @@ def kimi_k3_debugmodel(
     )
 
 
-# FSDP flattens dp_shard and cp into one storage axis under CP.
-_OWNED = ComputeLayout(
-    shardings_by_mesh_axis={
-        MeshAxisName.DP_SHARD.value: Owned(),
-        f"{MeshAxisName.DP_SHARD.value}_{MeshAxisName.CP.value}": Owned(),
-    },
-    compute_dtype=torch.bfloat16,
-)
-
-
-def _blocks_of(*num_rows: int) -> ComputeLayout:
-    """A repeating BlockShard pattern with one Muon matrix per entry."""
-    return ComputeLayout(
-        shardings_by_mesh_axis={
-            MeshAxisName.DP_SHARD.value: BlockShard(dim=0, block_sizes=num_rows),
-            f"{MeshAxisName.DP_SHARD.value}_{MeshAxisName.CP.value}": BlockShard(
-                dim=0, block_sizes=num_rows
-            ),
-        },
-        compute_dtype=torch.bfloat16,
-    )
-
-
 def _dist_muon_optimizer(
     model_config: KimiK3Model.Config,
     *,
@@ -168,33 +145,54 @@ def _dist_muon_optimizer(
         for layer in model_config.layers
         if isinstance(layer.attention, KDA.Config)
     )
+    # FSDP flattens dp_shard and cp into one storage axis under CP.
+    owned = ComputeLayout(
+        shardings_by_mesh_axis={
+            MeshAxisName.DP_SHARD.value: Owned(),
+            f"{MeshAxisName.DP_SHARD.value}_{MeshAxisName.CP.value}": Owned(),
+        },
+        compute_dtype=torch.bfloat16,
+    )
+
+    def blocks_of(*num_rows: int) -> ComputeLayout:
+        """A repeating BlockShard pattern with one Muon matrix per entry."""
+        return ComputeLayout(
+            shardings_by_mesh_axis={
+                MeshAxisName.DP_SHARD.value: BlockShard(dim=0, block_sizes=num_rows),
+                f"{MeshAxisName.DP_SHARD.value}_{MeshAxisName.CP.value}": BlockShard(
+                    dim=0, block_sizes=num_rows
+                ),
+            },
+            compute_dtype=torch.bfloat16,
+        )
+
     # MLA fuses several projections into one parameter; Kimi runs Newton-Schulz
     # per logical projection, so each fused block is split (see #4692).
     attention_shardings = {
-        "wq_a": _OWNED,
+        "wq_a": owned,
         # per head: [q_nope_h; q_rope_h]
-        "wq_b": _blocks_of(attention.qk_nope_head_dim, attention.qk_rope_head_dim),
+        "wq_b": blocks_of(attention.qk_nope_head_dim, attention.qk_rope_head_dim),
         # one block: [kv_latent; k_rope]
-        "wkv_a": _blocks_of(attention.kv_lora_rank, attention.qk_rope_head_dim),
+        "wkv_a": blocks_of(attention.kv_lora_rank, attention.qk_rope_head_dim),
         # per head: [k_nope_h; v_h]
-        "inner_attention.wkv_b": _blocks_of(
+        "inner_attention.wkv_b": blocks_of(
             attention.qk_nope_head_dim, attention.v_head_dim
         ),
-        "gate": _blocks_of(attention.v_head_dim),
-        "wo": _OWNED,
+        "gate": blocks_of(attention.v_head_dim),
+        "wo": owned,
     }
     attention_shardings |= extra_full_attention_shardings or {}
-    per_kda_head = _blocks_of(delta_attention.head_dim)
+    per_kda_head = blocks_of(delta_attention.head_dim)
     # forget_a is the shared low-rank down projection and output_proj mixes
     # heads back into the model dimension, so both are whole-matrix compute.
     delta_attention_shardings = {
         "q_proj": per_kda_head,
         "k_proj": per_kda_head,
         "v_proj": per_kda_head,
-        "forget_a": _OWNED,
+        "forget_a": owned,
         "forget_b": per_kda_head,
         "output_gate": per_kda_head,
-        "output_proj": _OWNED,
+        "output_proj": owned,
     }
     per_expert = _per_expert_compute_layout(parallelism)
     feed_forward_shardings = {
@@ -205,7 +203,7 @@ def _dist_muon_optimizer(
             },
             compute_dtype=torch.bfloat16,
         ),
-        "w2": _OWNED,
+        "w2": owned,
     }
     expert_projections = ("w13.weight", "w2.weight")
 
@@ -243,7 +241,7 @@ def _dist_muon_optimizer(
                     for projection in expert_projections
                 }
             )
-            shardings[f"{prefix}.feed_forward.router.gate.weight"] = _OWNED
+            shardings[f"{prefix}.feed_forward.router.gate.weight"] = owned
             shardings.update(
                 {
                     f"{prefix}.feed_forward.shared_experts.{projection}.weight": compute_sharding
@@ -252,7 +250,7 @@ def _dist_muon_optimizer(
             )
             shardings.update(
                 {
-                    f"{prefix}.feed_forward.{projection}.weight": _OWNED
+                    f"{prefix}.feed_forward.{projection}.weight": owned
                     for projection in ("routed_down", "routed_up")
                 }
             )

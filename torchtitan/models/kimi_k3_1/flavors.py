@@ -19,12 +19,14 @@ from torchtitan.models.common.decoder_sharding import (
     replicated_state_sharding_config,
 )
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
+from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 from torchtitan.models.kimi_k3.flavors import (
     kimi_k3_config,
-    linear_config,
+    linear,
     mla_attention_config,
     vision_encoder_config,
 )
+from torchtitan.models.kimi_k3.model import KimiK3Model
 
 from .dsa import (
     AbsorbedKVProjection,
@@ -52,19 +54,19 @@ def _dsa_config(
     num_index_heads: int,
     index_head_dim: int,
     indexer_loss_coeff: float,
-) -> KimiDSAAttention.Config:
+) -> KimiMLAAttention.Config:
     return mla_attention_config(
         config_cls=partial(
             KimiDSAAttention.Config,
             indexer=KimiDSAIndexer.Config(
                 num_index_heads=num_index_heads,
                 index_head_dim=index_head_dim,
-                wq_b=linear_config(
+                wq_b=linear(
                     q_lora_rank,
                     num_index_heads * index_head_dim,
                     sharding_config=replicated_state_sharding_config("weight"),
                 ),
-                wk=linear_config(
+                wk=linear(
                     dim,
                     index_head_dim,
                     sharding_config=replicated_state_sharding_config("weight"),
@@ -73,7 +75,7 @@ def _dsa_config(
                     normalized_shape=index_head_dim,
                     sharding_config=replicated_state_sharding_config("weight", "bias"),
                 ),
-                weights_proj=linear_config(
+                weights_proj=linear(
                     dim,
                     num_index_heads,
                     sharding_config=replicated_state_sharding_config("weight"),
@@ -118,7 +120,7 @@ def _dsa_config(
 
 def _debugmodel(
     *, seq_len: int, indexer_loss_coeff: float, parallelism: ParallelismConfig
-) -> KimiK31Model.Config:
+) -> KimiK3Model.Config:
     dim = 256
     return kimi_k3_config(
         config_cls=KimiK31Model.Config,
@@ -166,7 +168,7 @@ def _debugmodel(
 
 def _kimi_k3_1_pro(
     *, seq_len: int, indexer_loss_coeff: float, parallelism: ParallelismConfig
-) -> KimiK31Model.Config:
+) -> KimiK3Model.Config:
     dim = 7168
     return kimi_k3_config(
         config_cls=KimiK31Model.Config,
@@ -224,7 +226,7 @@ def build_model_config(
     parallelism: ParallelismConfig,
     seq_len: int | None = None,
     indexer_loss_coeff: float = 0.01,
-) -> KimiK31Model.Config:
+) -> KimiK3Model.Config:
     get_config, max_context_len = MODEL_FLAVORS[flavor]
     context_len = seq_len or max_context_len
     if context_len > max_context_len:

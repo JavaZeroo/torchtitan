@@ -25,7 +25,7 @@ from torchtitan.models.kimi_k3.flavors import (
     mla_config,
     vision_encoder_config,
 )
-from torchtitan.models.kimi_k3.model import KimiK3Model, KimiK3TransformerBlock
+from torchtitan.models.kimi_k3.model import KimiK3Model
 from torchtitan.models.kimi_k3.moe import KimiLatentMoE
 from torchtitan.models.kimi_k3.state_dict_adapter import KimiK3StateDictAdapter
 from torchtitan_recipes.tests.models.kimi_k3 import _dist_muon_optimizer
@@ -35,7 +35,6 @@ def _small_model_config(*, attn_backend: str = "flex") -> KimiK3Model.Config:
     """Build a reduced KDA+MLA, dense+MoE, multimodal Kimi K3 config."""
     dim = 64
     return kimi_k3_config(
-        config_cls=KimiK3Model.Config,
         parallelism=ParallelismConfig(),
         max_context_length=128,
         dim=dim,
@@ -43,7 +42,6 @@ def _small_model_config(*, attn_backend: str = "flex") -> KimiK3Model.Config:
         num_layers=2,
         full_attention_layers={1},
         full_attention=partial(mla_config, attn_backend=attn_backend),
-        full_attention_block_cls=KimiK3TransformerBlock.Config,
         attn_res_block_size=1,
         num_heads=2,
         q_lora_rank=32,
