@@ -18,6 +18,7 @@ from torchtitan.models.common.decoder_sharding import (
     mla_attention_local_spmd_sharding_config,
     replicated_state_sharding_config,
 )
+from torchtitan.models.common.nn_modules import LayerNorm
 from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 from torchtitan.models.kimi_k3.flavors import (
@@ -30,7 +31,6 @@ from torchtitan.models.kimi_k3.model import KimiK3Model
 
 from .dsa import (
     AbsorbedKVProjection,
-    FP32LayerNorm,
     KimiDSAAttention,
     KimiDSAIndexer,
     KimiSparseAttention,
@@ -71,7 +71,7 @@ def _dsa_config(
                     index_head_dim,
                     sharding_config=replicated_state_sharding_config("weight"),
                 ),
-                k_norm=FP32LayerNorm.Config(
+                k_norm=LayerNorm.Config(
                     normalized_shape=index_head_dim,
                     sharding_config=replicated_state_sharding_config("weight", "bias"),
                 ),

@@ -10,7 +10,6 @@ from dataclasses import dataclass
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch_remat as remat
 
 from torchtitan.models.base.module import Module
@@ -32,7 +31,6 @@ from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 
 __all__ = [
     "AbsorbedKVProjection",
-    "FP32LayerNorm",
     "KimiDSAAttention",
     "KimiDSAIndexer",
     "KimiSparseAttention",
@@ -54,23 +52,6 @@ __all__ = [
 # I = indexer head count (num_index_heads)
 # E = indexer head dimension (index_head_dim)
 # J = flattened projection channels
-
-
-class FP32LayerNorm(LayerNorm):
-    """LayerNorm computed in fp32 and cast back to the input dtype."""
-
-    @dataclass(kw_only=True, slots=True)
-    class Config(LayerNorm.Config):
-        pass
-
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
-        return F.layer_norm(
-            input.float(),
-            self.normalized_shape,
-            self.weight.float(),
-            self.bias.float(),
-            self.eps,
-        ).to(input.dtype)
 
 
 class AbsorbedKVProjection(Module):
@@ -118,7 +99,7 @@ class KimiDSAIndexer(Module):
         index_head_dim: int
         wq_b: Linear.Config
         wk: Linear.Config
-        k_norm: FP32LayerNorm.Config
+        k_norm: LayerNorm.Config
         weights_proj: Linear.Config
 
     def __init__(self, config: Config) -> None:
