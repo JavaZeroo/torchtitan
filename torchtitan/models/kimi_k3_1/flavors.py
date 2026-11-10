@@ -62,7 +62,7 @@ def _dsa_config(
     qk_rope_head_dim: int,
     v_head_dim: int,
     index_topk: int,
-    index_num_heads: int,
+    num_index_heads: int,
     index_head_dim: int,
     enable_sp: bool,
 ) -> KimiDSAAttention.Config:
@@ -123,11 +123,11 @@ def _dsa_config(
             sharding_config=mla_attention_local_spmd_sharding_config(),
         ),
         indexer=KimiDSAIndexer.Config(
-            index_num_heads=index_num_heads,
+            num_index_heads=num_index_heads,
             index_head_dim=index_head_dim,
             wq_b=_linear(
                 q_lora_rank,
-                index_num_heads * index_head_dim,
+                num_index_heads * index_head_dim,
                 sharding_config=replicated_state_sharding_config("weight"),
             ),
             wk=_linear(
@@ -141,7 +141,7 @@ def _dsa_config(
             ),
             weights_proj=_linear(
                 dim,
-                index_num_heads,
+                num_index_heads,
                 sharding_config=replicated_state_sharding_config("weight"),
             ),
         ),
@@ -164,7 +164,7 @@ def _kimi_k3_1_config(
     qk_rope_head_dim: int,
     v_head_dim: int,
     index_topk: int,
-    index_num_heads: int,
+    num_index_heads: int,
     index_head_dim: int,
     kda_head_dim: int,
     conv_kernel_size: int,
@@ -217,7 +217,7 @@ def _kimi_k3_1_config(
                         qk_rope_head_dim=qk_rope_head_dim,
                         v_head_dim=v_head_dim,
                         index_topk=index_topk,
-                        index_num_heads=index_num_heads,
+                        num_index_heads=num_index_heads,
                         index_head_dim=index_head_dim,
                         enable_sp=enable_sp,
                     )
@@ -303,7 +303,7 @@ def _debugmodel(*, seq_len: int, parallelism: ParallelismConfig) -> KimiK31Model
         qk_rope_head_dim=64,
         v_head_dim=128,
         index_topk=128,
-        index_num_heads=4,
+        num_index_heads=4,
         index_head_dim=64,
         kda_head_dim=128,
         conv_kernel_size=4,
@@ -345,7 +345,7 @@ def _kimi_k3_1_pro(
         qk_rope_head_dim=64,
         v_head_dim=128,
         index_topk=2048,
-        index_num_heads=32,
+        num_index_heads=32,
         index_head_dim=128,
         kda_head_dim=128,
         conv_kernel_size=4,

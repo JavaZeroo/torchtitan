@@ -48,7 +48,7 @@ __all__ = [
 # L = KV latent dimension (kv_lora_rank)
 # P = packed per-head KV up-projection channels (N + V)
 # G = shared latent key channels (L + R)
-# I = indexer head count (index_num_heads)
+# I = indexer head count (num_index_heads)
 # E = indexer head dimension (index_head_dim)
 # J = flattened projection channels
 
@@ -58,7 +58,7 @@ class KimiDSAIndexer(Module):
 
     @dataclass(kw_only=True, slots=True)
     class Config(Module.Config):
-        index_num_heads: int
+        num_index_heads: int
         index_head_dim: int
         wq_b: Linear.Config
         wk: Linear.Config
@@ -67,7 +67,7 @@ class KimiDSAIndexer(Module):
 
     def __init__(self, config: Config) -> None:
         super().__init__()
-        self.index_num_heads = config.index_num_heads
+        self.num_index_heads = config.num_index_heads
         self.index_head_dim = config.index_head_dim
         self.wq_b = config.wq_b.build()
         self.wk = config.wk.build()
@@ -80,7 +80,7 @@ class KimiDSAIndexer(Module):
         idx_q_TJ = self.wq_b(q_TC)
         remat.recompute_needs_tensor(idx_q_TJ)
         idx_q_TIE = idx_q_TJ.view(
-            q_TC.shape[0], self.index_num_heads, self.index_head_dim
+            q_TC.shape[0], self.num_index_heads, self.index_head_dim
         )
         idx_k_TE = self.wk(x_TD)
         remat.recompute_needs_tensor(idx_k_TE)
@@ -94,7 +94,7 @@ class KimiDSAIndexer(Module):
         idx_w_TI = self.weights_proj(x_TD)
         remat.recompute_needs_tensor(idx_w_TI)
         idx_w_TI = idx_w_TI * (
-            self.index_head_dim**-0.5 * self.index_num_heads**-0.5
+            self.index_head_dim**-0.5 * self.num_index_heads**-0.5
         )
         return idx_q_TIE, idx_k_TE, idx_w_TI
 
@@ -246,7 +246,7 @@ class KimiDSAAttention(KimiMLAAttention):
                 seq_len=min(seq_len, self.inner_attention.index_topk),
             )
             indexer_flops = (
-                6 * self.indexer.index_num_heads * self.indexer.index_head_dim * seq_len
+                6 * self.indexer.num_index_heads * self.indexer.index_head_dim * seq_len
             )
             return attention_flops + indexer_flops
 
