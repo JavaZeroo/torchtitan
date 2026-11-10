@@ -4,14 +4,7 @@
 # This source code is licensed under the BSD-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-"""Kimi K3.1 DeepSeek Sparse Attention components.
-
-Forward semantics follow vLLM at b65f94500866d7277a0863baff4369888819091a
-(``vllm/models/kimi_k3/nvidia/dsa.py``), with HF config revision
-d9e99b0792a5e93b78ea9bea62a68167e36ddd9e. The released configuration uses
-index_topk_freq=1 and index_skip_topk_offset=1, so every layer selected by
-``dsa_layers`` computes its own sparse indices.
-"""
+"""Kimi K3.1 DeepSeek Sparse Attention components."""
 
 from dataclasses import dataclass
 

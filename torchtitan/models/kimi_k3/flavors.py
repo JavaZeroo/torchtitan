@@ -598,7 +598,6 @@ def _kimi_k3_config(
     attn_backend: str,
     parallelism: ParallelismConfig,
     full_attention_config_factory: Callable[..., KimiMLAAttention.Config] = _mla_config,
-    model_config_cls: type[KimiK3Model.Config] = KimiK3Model.Config,
 ) -> KimiK3Model.Config:
     """Assemble a Kimi K3 config from the released topology's free parameters.
 

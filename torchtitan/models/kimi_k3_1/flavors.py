@@ -27,9 +27,8 @@ from torchtitan.models.kimi_k3.flavors import (
 from torchtitan.models.kimi_k3.model import KimiK3Model
 
 from .dsa import KimiDSAAttention, KimiDSAIndexer, KimiSparseAttention
-from .model import KimiK31Model
 
-__all__ = ["build_model_config", "KimiK31Model", "MODEL_FLAVORS"]
+__all__ = ["build_model_config", "MODEL_FLAVORS"]
 
 
 def _dsa_config(
@@ -167,7 +166,6 @@ def _debugmodel(
             index_head_dim=64,
             indexer_loss_coeff=indexer_loss_coeff,
         ),
-        model_config_cls=KimiK31Model.Config,
     )
 
 
@@ -219,7 +217,6 @@ def _kimi_k3_1_pro(
             index_head_dim=128,
             indexer_loss_coeff=indexer_loss_coeff,
         ),
-        model_config_cls=KimiK31Model.Config,
     )
 
 
