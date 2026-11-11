@@ -18,18 +18,13 @@ from torchtitan.models.common.attention import (
     InnerAttention,
     VarlenAttentionMetadata,
 )
-from torchtitan.models.common.attention.sparse_indexer import (
-    compressed_cu_seqlens,
-    select_topk,
-    SparseIndexerLoss,
-)
 
 from torchtitan.models.common.attn_gym import AuxRequest, gather_attn
 from torchtitan.models.common.linear import Linear
 from torchtitan.models.common.nn_modules import RMSNorm
 from torchtitan.models.common.rope import RoPE
 
-from .compressor import Compressor, Indexer
+from .compressor import compressed_cu_seqlens, Compressor, Indexer, SparseIndexerLoss
 
 
 def _packed_cu_seqlens(
@@ -241,7 +236,7 @@ class CompressedSparseAttention(DSV4InnerAttention):
     ) -> torch.Tensor:
         cu_seqlens = _packed_cu_seqlens(attention_metadata)
         with spmd.no_typecheck():
-            cmp_topk, topk_scores = select_topk(
+            cmp_topk, topk_scores = Indexer.select(
                 idx_q,
                 idx_k,
                 idx_w,

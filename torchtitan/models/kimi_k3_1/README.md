@@ -11,11 +11,10 @@ Same as [Kimi K3](../kimi_k3/README.md).
 
 Each DSA layer keeps the Kimi K3 MLA projections and output gate, and adds an
 indexer with 32 heads of dimension 128 that selects 2048 tokens per query.
-Top-k selection and the indexer loss are shared with DeepSeek V4
-(`torchtitan/models/common/attention/sparse_indexer.py`). The indexer is
-trained only by the indexer loss.
-`build_model_config(..., indexer_loss_coeff=...)` sets its coefficient
-(default 0.01); 0 turns the loss off.
+Top-k selection and the indexer loss come from
+`torchtitan/models/deepseek_v4/compressor.py`. The indexer is trained only by
+the indexer loss. `build_model_config(..., indexer_loss_coeff=...)` sets its
+coefficient (default 0.01); 0 turns the loss off.
 
 Sparse attention runs Attention Gym `gather_attn` with `(latent, rope)`
 pairs. Its fused kernel needs 16 to 128 heads, so the debug model has 16.

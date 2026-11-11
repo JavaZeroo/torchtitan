@@ -14,8 +14,8 @@ from unittest.mock import patch
 import torch
 
 from torchtitan.models.common.attention import VarlenAttentionMetadata
-from torchtitan.models.common.attention.sparse_indexer import select_topk
 from torchtitan.models.common.aux_loss import AuxLoss
+from torchtitan.models.deepseek_v4.compressor import Indexer
 from torchtitan_recipes.tests.models import deepseek_v4 as config_registry
 
 
@@ -30,7 +30,7 @@ class TestIndexerSelect(unittest.TestCase):
         idx_k = torch.randn(n_cmp, 32, generator=g, device=device)
         idx_w = torch.randn(seqlen, 8, generator=g, device=device)
 
-        selected, selected_scores = select_topk(
+        selected, selected_scores = Indexer.select(
             idx_q, idx_k, idx_w, max_seqlen=seqlen, ratio=ratio, topk=topk
         )
 

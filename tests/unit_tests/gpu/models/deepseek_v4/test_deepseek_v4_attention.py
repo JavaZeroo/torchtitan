@@ -13,12 +13,12 @@ numerics are tested in Attention Gym.
 import pytest
 import torch
 
-from torchtitan.models.common.attention.sparse_indexer import select_topk
 from torchtitan.models.deepseek_v4.attention import (
     CompressedSparseAttention,
     HeavilyCompressedAttention,
     SlidingWindowAttention,
 )
+from torchtitan.models.deepseek_v4.compressor import Indexer
 
 SEQLEN, N_HEADS, HEAD_DIM, WINDOW, SCALE, TOPK = 32, 4, 8, 6, 0.1234, 5
 
@@ -113,7 +113,7 @@ def test_matches_dense_masked_attention(cls, ratio, device, dtype, tol):
             )
             idx = [t.to(device) for t in (idx_q, idx_k, idx_w)]
             out = module(q, swa_k, cmp_k, *idx, attn_sink)
-            cmp_topk, _ = select_topk(
+            cmp_topk, _ = Indexer.select(
                 idx_q,
                 idx_k,
                 idx_w,

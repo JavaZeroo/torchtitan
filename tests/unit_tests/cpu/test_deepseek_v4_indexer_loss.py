@@ -12,14 +12,14 @@ import torch
 from attn_gym.sparse.gather_attn import AuxRequest, gather_attn
 
 from torchtitan.config.parallelism import ParallelismConfig
-from torchtitan.models.common.attention.sparse_indexer import (
-    compressed_cu_seqlens,
-    select_topk,
-    SparseIndexerLoss,
-)
 from torchtitan.models.common.aux_loss import AuxLoss
 from torchtitan.models.deepseek_v4 import build_model_config
 from torchtitan.models.deepseek_v4.attention import CompressedSparseAttention
+from torchtitan.models.deepseek_v4.compressor import (
+    compressed_cu_seqlens,
+    Indexer,
+    SparseIndexerLoss,
+)
 
 
 def dense_attention(q, local, compressed, indices, sink, scale, window, cu):
@@ -237,10 +237,10 @@ class TestIndexerSelect(unittest.TestCase):
         k = torch.randn(3, 8, requires_grad=True)
         w = torch.randn(12, 3, requires_grad=True)
         for cu in (None, torch.tensor([0, 4, 12], dtype=torch.int32)):
-            indices, scores = select_topk(
+            indices, scores = Indexer.select(
                 q, k, w, max_seqlen=12, ratio=4, topk=2, cu_seqlens=cu
             )
-            index_only, no_scores = select_topk(
+            index_only, no_scores = Indexer.select(
                 q,
                 k,
                 w,
@@ -273,10 +273,7 @@ class TestIndexerSelect(unittest.TestCase):
             )
             module = cfg.build().train(training)
             with (
-                patch(
-                    "torchtitan.models.deepseek_v4.attention.select_topk",
-                    wraps=select_topk,
-                ) as select,
+                patch.object(Indexer, "select", wraps=Indexer.select) as select,
                 patch(
                     "torchtitan.models.deepseek_v4.attention.gather_attn",
                     wraps=gather_attn,

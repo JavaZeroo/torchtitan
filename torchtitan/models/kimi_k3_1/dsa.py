@@ -21,13 +21,10 @@ from torchtitan.models.common.attention import (
     local_head_split,
     VarlenAttentionMetadata,
 )
-from torchtitan.models.common.attention.sparse_indexer import (
-    select_topk,
-    SparseIndexerLoss,
-)
 from torchtitan.models.common.attn_gym import AuxRequest, gather_attn
 from torchtitan.models.common.linear import Linear, maybe_gather_tp_input
 from torchtitan.models.common.nn_modules import LayerNorm
+from torchtitan.models.deepseek_v4.compressor import Indexer, SparseIndexerLoss
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 
 __all__ = [
@@ -186,7 +183,7 @@ class KimiSparseAttention(InnerAttention):
         aux_loss = self.aux_loss if self.training else None
         cu_seqlens = attention_metadata.cu_seq_q
         with spmd.no_typecheck():
-            topk_indices_TS, topk_scores_TS = select_topk(
+            topk_indices_TS, topk_scores_TS = Indexer.select(
                 idx_q_TIE,
                 idx_k_TE,
                 idx_w_TI,
