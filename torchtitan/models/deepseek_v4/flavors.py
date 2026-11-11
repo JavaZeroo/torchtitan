@@ -33,6 +33,7 @@ from torchtitan.models.common import (
     SqrtSoftplus,
     VocabParallelEmbedding,
 )
+from torchtitan.models.common.attention.sparse_indexer import SparseIndexerLoss
 from torchtitan.models.common.config_utils import (
     fused_gate_up_param_init,
     fused_grouped_gate_up_param_init,
@@ -63,7 +64,7 @@ from .attention import (
     HeavilyCompressedAttention,
     SlidingWindowAttention,
 )
-from .compressor import Compressor, Indexer, SparseIndexerLoss
+from .compressor import Compressor, Indexer
 from .mhc import HcHead, HcPost, HcPre
 from .model import DeepSeekV4Model, DeepSeekV4TransformerBlock
 from .moe import DeepSeekV4Router

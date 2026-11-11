@@ -13,13 +13,13 @@ import torch.nn as nn
 
 from torchtitan.config.parallelism import ParallelismConfig
 from torchtitan.models.base.sharding import ShardingConfig
+from torchtitan.models.common.attention.sparse_indexer import SparseIndexerLoss
 from torchtitan.models.common.decoder_sharding import (
     dense_param_placement,
     mla_attention_local_spmd_sharding_config,
     replicated_state_sharding_config,
 )
 from torchtitan.models.common.nn_modules import LayerNorm
-from torchtitan.models.deepseek_v4.compressor import SparseIndexerLoss
 from torchtitan.models.kimi_k3.attention import KimiMLAAttention
 from torchtitan.models.kimi_k3.flavors import (
     kimi_k3_config,
