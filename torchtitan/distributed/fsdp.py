@@ -22,6 +22,7 @@ from torch.distributed.tensor import Shard
 
 from torchtitan.config.parallelism import FSDPSymmMemScope
 from torchtitan.distributed.parallelism_context import ParallelismContext
+from torchtitan.models.base.module import Module
 from torchtitan.models.common.linear import GroupedLinear
 from torchtitan.models.common.moe import MoE
 
@@ -38,6 +39,16 @@ __all__ = [
 ]
 
 logger = logging.getLogger(__name__)
+
+
+def fsdp_ignored_parameters(model: nn.Module) -> set[nn.Parameter]:
+    """Collect declarations once, including parameters nested below FSDP units."""
+    return {
+        parameter
+        for module in model.modules()
+        if isinstance(module, Module)
+        for parameter in module.fsdp_ignored_parameters()
+    }
 
 
 def post_validate_fsdp_for_cuda_graph(model_parts: list[nn.Module]) -> None:
@@ -246,6 +257,7 @@ def apply_fsdp_to_multimodal_encoder(
     )
     fsdp_config: dict[str, Any] = {
         "mesh": dp_mesh,
+        "ignored_params": fsdp_ignored_parameters(encoder),
         "mp_policy": mp_policy,
         "reshard_after_forward": reshard_after_forward,
         "dp_mesh_dims": dp_mesh_dims,
@@ -320,6 +332,7 @@ def apply_fsdp_to_decoder(
         param_dtype_override_fn=param_dtype_override_fn,
     )
     fsdp_config: dict[str, Any] = {"mesh": dp_mesh, "mp_policy": mp_policy}
+    fsdp_config["ignored_params"] = fsdp_ignored_parameters(model)
     if dp_mesh_dims is not None:
         fsdp_config["dp_mesh_dims"] = dp_mesh_dims
     if cpu_offload:

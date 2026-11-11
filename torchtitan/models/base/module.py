@@ -48,12 +48,21 @@ class Module(nn.Module, Configurable):
     _sharding_config: ShardingConfig | None = None
     _pos_arg_list: list[str] | None = None
     _parallelized: bool = False
+
     # ActivationRematConfig.apply replaces these defaults on every Module in a
     # checkpointed block.
     # Outside an enclosing torch_remat checkpoint, they do not affect execution.
     _remat_module_fqn: str = ""
     _remat_save_patterns: tuple[str, ...] = ()
     _remat_recompute_patterns: tuple[str, ...] = ()
+
+    def fsdp_ignored_parameters(self) -> tuple[nn.Parameter, ...]:
+        """Declare parameters whose storage and gradient reduction are external.
+
+        The owner must establish their device and distributed placement before
+        execution. FSDP will neither shard nor reduce these parameters.
+        """
+        return ()
 
     def remat_region_name(self, local_name: str) -> str:
         """Return a region's configured qualified name or its local name."""

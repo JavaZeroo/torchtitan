@@ -327,6 +327,7 @@ class TrainingEngine(Configurable, torch.distributed.checkpoint.stateful.Statefu
             hf_assets_path=hf_assets_path,
             create_seed_checkpoint=create_seed_checkpoint,
         )
+        self._initialize_model_resources()
         self.model_device_mem_stats = self.device_memory_monitor.get_peak_stats()
         self._initialize_optim()
         self._initialize_checkpointer(
@@ -446,6 +447,13 @@ class TrainingEngine(Configurable, torch.distributed.checkpoint.stateful.Statefu
         # GraphTrainer to stop reading its compile config there first (apply_compile,
         # EP-overlap chunking, enable_autoparallel, GraphPP runtime); then delete this hook.
         return {"local_compile_regions": self.model_config.local_compile_regions}
+
+    def _initialize_model_resources(self) -> None:
+        """Bind external parameter storage before optimizers capture parameters.
+
+        Subclasses must keep parameter identities stable after this phase and
+        own cleanup on initialization failure as well as normal shutdown.
+        """
 
     def _initialize_optim(self) -> None:
         """Construct the parameter update and its state."""
