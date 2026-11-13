@@ -26,7 +26,7 @@ stage_env() {
     python - <<'EOF'
 import importlib, torch
 print("torch", torch.__version__, "cuda", torch.version.cuda, "cc", torch.cuda.get_device_capability())
-for m in ("triton", "torchao", "spmd_types", "torch_remat", "attn_gym", "cutlass", "flash_attn_interface"):
+for m in ("torchvision", "av", "triton", "torchao", "spmd_types", "torch_remat", "attn_gym", "cutlass", "flash_attn_interface"):
     try:
         mod = importlib.import_module(m)
         print(m, getattr(mod, "__version__", "?"), getattr(mod, "__file__", ""))

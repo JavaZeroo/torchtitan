@@ -46,7 +46,7 @@ def root_error(log_path):
             ]
             return line.strip()[:200], frames[-4:]
     for line in lines:
-        if re.search(r"NCCL (WARN|ERROR)|CUDA error|out of memory|Segmentation fault|Killed|: error: ", line):
+        if re.search(r"NCCL (WARN|ERROR)|CUDA error|out of memory|Segmentation fault|Killed|: error: |No module named", line):
             return line.strip()[:200], []
     return "-", []
 
