@@ -14,6 +14,7 @@ REPO=$PWD
 OUT=${OUT:-$REPO/../k31_h20_out}
 AG_SRC=${AG_SRC:-$REPO/../attention-gym}
 STEPS=${STEPS:-20}
+GPUS=${GPUS:-$(nvidia-smi -L | wc -l)}
 mkdir -p "$OUT"
 export PYTHONPATH=$REPO${PYTHONPATH:+:$PYTHONPATH}
 
@@ -57,7 +58,7 @@ stage_ci() {
   for t in kimi_k3_1_fsdp+ep kimi_k3_mm_allgather_kv_cp kimi_k3_mm_ulysses_cp; do
     NCCL_NVLS_ENABLE=0 python -m tests.integration_tests.run_tests \
       --test_suite h100 --execution_mode real_pg --gpu_arch_type cuda \
-      --gpu_arch h100 --ngpu 8 --test_name "$t" "$d/out_$t" > "$d/$t.log" 2>&1
+      --gpu_arch h100 --ngpu "$GPUS" --test_name "$t" "$d/out_$t" > "$d/$t.log" 2>&1
     echo $? > "$d/$t.exit"
     log "ci $t exit=$(cat "$d/$t.exit")"
   done
@@ -74,27 +75,39 @@ _train() {
   log "par $cfg (ngpu=$ngpu) exit=$(cat "$g/$cfg.exit")"
 }
 
+_twice() {
+  # Runs $2 twice; the first run is kept as ${2}_run1 (run-to-run noise).
+  local g=$1 cfg=$2 ngpu=$3
+  _train "$g" "$cfg" "$ngpu" load
+  for x in "tb_$cfg" "$cfg.log" "$cfg.exit"; do mv "$g/$x" "$g/${x/$cfg/${cfg}_run1}"; done
+  _train "$g" "$cfg" "$ngpu" load
+}
+
+_fits() { [ "$1" -le "$GPUS" ] || { log "skip $2 (needs $1 GPUs, have $GPUS)"; return 1; }; }
+
 stage_par() {
-  # Same seed checkpoint, same data (dp_shard=2 everywhere), 20 steps, seed 42,
-  # nondeterministic. *_fsdp2 runs twice to measure run-to-run noise.
+  # Same seed checkpoint and same data per comparison, 20 steps, seed 42,
+  # nondeterministic. Baselines run twice to measure run-to-run noise.
+  # dp_shard=2 runs compare against *_fsdp2; dp_shard=1 runs against *_dp1.
   local g
   g=$OUT/par_p; rm -rf "$g"; mkdir -p "$g"
   _train "$g" p_seed 1 seed
-  _train "$g" p_fsdp2 2 load
-  mv "$g/tb_p_fsdp2" "$g/tb_p_fsdp2_run1"; mv "$g/p_fsdp2.log" "$g/p_fsdp2_run1.log"; mv "$g/p_fsdp2.exit" "$g/p_fsdp2_run1.exit"
-  _train "$g" p_fsdp2 2 load
+  _twice "$g" p_dp1 1
+  _train "$g" p_pp2 2 load
+  _twice "$g" p_fsdp2 2
   _train "$g" p_fsdp2_ep2 2 load
-  _train "$g" p_fsdp2_pp2 4 load
-  _train "$g" p_fsdp2_ep2_pp2 4 load
+  _fits 4 p_fsdp2_pp2 && _train "$g" p_fsdp2_pp2 4 load
+  _fits 4 p_fsdp2_ep2_pp2 && _train "$g" p_fsdp2_ep2_pp2 4 load
 
   g=$OUT/par_t; rm -rf "$g"; mkdir -p "$g"
   _train "$g" t_seed 1 seed
-  _train "$g" t_fsdp2 2 load
-  mv "$g/tb_t_fsdp2" "$g/tb_t_fsdp2_run1"; mv "$g/t_fsdp2.log" "$g/t_fsdp2_run1.log"; mv "$g/t_fsdp2.exit" "$g/t_fsdp2_run1.exit"
-  _train "$g" t_fsdp2 2 load
-  _train "$g" t_fsdp2_ep2 2 load
-  _train "$g" t_fsdp2_tp2_ep2 4 load
-  _train "$g" t_fsdp2_tp2_ep2_pp2 8 load
+  _twice "$g" t_dp1 1
+  _train "$g" t_tp2_ep2 2 load
+  _fits 4 t_fsdp2 && _twice "$g" t_fsdp2 2
+  _fits 4 t_fsdp2_ep2 && _train "$g" t_fsdp2_ep2 2 load
+  _fits 4 t_fsdp2_tp2_ep2 && _train "$g" t_fsdp2_tp2_ep2 4 load
+  _fits 8 t_fsdp2_tp2_ep2_pp2 && _train "$g" t_fsdp2_tp2_ep2_pp2 8 load
+  return 0
 }
 
 stage_neg() {
@@ -104,37 +117,49 @@ stage_neg() {
 
 stage_k3bisect() {
   # Kimi K3 debug model, 1 GPU, deterministic, 10 steps, loss + grad_norm from
-  # TensorBoard. Attention Gym comes from a git worktree on PYTHONPATH, one per
-  # commit. Each loss_compare call runs the model twice with that commit (so
-  # it also checks run-to-run repeatability) and compares against v0.0.19.
+  # TensorBoard, with Attention Gym from a git worktree on PYTHONPATH. v0.0.19
+  # runs twice (export, then compare) to check that it repeats bitwise; then a
+  # binary search finds the first commit up to ff06a9221 that changes K3.
   local d=$OUT/k3bisect; rm -rf "$d"; mkdir -p "$d"
   local base=0d0197fb36d95695dccef03436bb0649f985b32d
   local tip=ff06a922140c03fc118e6eaa64001ad139c536ec
   git -C "$AG_SRC" fetch -q origin 2>/dev/null
-  git -C "$AG_SRC" rev-list --reverse --first-parent "$base..$tip" > "$d/commits.txt"
+  mapfile -t C < <(git -C "$AG_SRC" rev-list --reverse --first-parent "$base..$tip")
+  printf "%s\n" "${C[@]}" > "$d/commits.txt"
   local wt=$OUT/ag_worktrees; mkdir -p "$wt"
+  # $1 sha, $2 run name, $3 extra loss_compare args; prints SAME, DIFF or CRASH.
   _k3run() {
-    local sha=$1 gpu=$2 extra=$3
+    local sha=$1 name=$2 extra=$3
     [ -d "$wt/$sha" ] || git -C "$AG_SRC" worktree add -q --detach "$wt/$sha" "$sha"
-    CUDA_VISIBLE_DEVICES=$gpu PYTHONPATH=$wt/$sha:$PYTHONPATH \
+    CUDA_VISIBLE_DEVICES=0 PYTHONPATH=$wt/$sha:$PYTHONPATH \
       python scripts/loss_compare.py . . \
       --baseline-module=torchtitan_recipes.tests.models.kimi_k3 \
       --baseline-config=kimi_k3_debugmodel --steps=10 --no-seed-checkpoint \
       --metrics=loss,grad_norm --baseline-ngpus=1 --test-ngpus=1 \
-      --job-dump-folder="$d/dump_$sha" --assert-equal $extra \
-      > "$d/$sha.log" 2>&1
-    echo $? > "$d/$sha.exit"
+      --job-dump-folder="$d/dump_$name" --assert-equal $extra \
+      > "$d/$name.log" 2>&1
+    local code=$? status
+    if [ $code -eq 0 ]; then status=SAME
+    elif [ -d "$d/dump_$name/tb_baseline" ]; then status=DIFF
+    else status=CRASH; fi
+    echo "$name $sha $status" >> "$d/results.txt"
+    log "k3bisect $name ${sha:0:9} $status" >&2
+    echo $status
   }
-  _k3run "$base" 0 "--export-result=$d/base_v0.0.19.txt"
-  log "k3bisect base exit=$(cat "$d/$base.exit")"
-  local i=0
-  while read -r sha; do
-    _k3run "$sha" $((i % 8)) "--import-result=$d/base_v0.0.19.txt" &
-    i=$((i + 1))
-    if [ $((i % 8)) -eq 0 ]; then wait; fi
-  done < "$d/commits.txt"
-  wait
-  log "k3bisect done ($i commits)"
+  local r
+  r=$(_k3run "$base" base "--export-result=$d/base_v0.0.19.txt")
+  [ "$r" = SAME ] || return 0
+  _k3run "$base" base_repeat "--import-result=$d/base_v0.0.19.txt" > /dev/null
+  local n=${#C[@]} lo=-1 hi=$(( ${#C[@]} - 1 ))
+  r=$(_k3run "${C[$hi]}" "c$hi" "--import-result=$d/base_v0.0.19.txt")
+  [ "$r" = DIFF ] || return 0
+  while [ $((hi - lo)) -gt 1 ]; do
+    local mid=$(( (lo + hi) / 2 ))
+    r=$(_k3run "${C[$mid]}" "c$mid" "--import-result=$d/base_v0.0.19.txt")
+    case $r in SAME) lo=$mid ;; DIFF) hi=$mid ;; *) return 0 ;; esac
+  done
+  echo "first_diff ${C[$hi]}" >> "$d/results.txt"
+  log "k3bisect first commit that changes K3: ${C[$hi]:0:9} (of $n)"
 }
 
 stages=("$@")

@@ -157,14 +157,20 @@ def compare(base, other):
     )
 
 
+def _par_base(group, run):
+    prefix = group[-1]
+    p = run.split("_")[1] if "_" in run else ""
+    dp1 = p in ("dp1", "pp2", "tp2")
+    return f"{prefix}_{'dp1' if dp1 else 'fsdp2'}_run1"
+
+
 def par_section():
-    for group, base_name in (("par_p", "p_fsdp2_run1"), ("par_t", "t_fsdp2_run1")):
-        print(f"## {group} (vs {base_name}, nondeterministic)")
+    for group in ("par_p", "par_t"):
+        print(f"## {group} (each run vs its baseline's first run, nondeterministic)")
         g = os.path.join(OUT, group)
         if not os.path.isdir(g):
             print("not run")
             continue
-        base = tb_scalars(os.path.join(g, "tb_" + base_name))
         runs = sorted(f[: -len(".exit")] for f in os.listdir(g) if f.endswith(".exit"))
         for r in runs:
             code = read(os.path.join(g, r + ".exit")).strip()
@@ -174,11 +180,16 @@ def par_section():
             if r.endswith("_seed"):
                 print(f"{r}: ok")
                 continue
-            m = tb_scalars(os.path.join(g, "tb_" + r))
-            if m is None or base is None or r == base_name:
-                print(f"{r}: ok{' (baseline)' if r == base_name else ' (no tb)'}")
+            base_name = _par_base(group, r)
+            if r == base_name:
+                print(f"{r}: ok (baseline)")
                 continue
-            print(f"{r}: {compare(base, m)}")
+            base = tb_scalars(os.path.join(g, "tb_" + base_name))
+            m = tb_scalars(os.path.join(g, "tb_" + r))
+            if m is None or base is None:
+                print(f"{r}: ok (no tb for it or {base_name})")
+                continue
+            print(f"{r} vs {base_name}: {compare(base, m)}")
 
 
 def neg_section():
@@ -197,32 +208,29 @@ def neg_section():
 def k3bisect_section():
     print("## k3bisect (Kimi K3 debug, 1 GPU, deterministic, 10 steps, vs attn-gym v0.0.19)")
     d = os.path.join(OUT, "k3bisect")
-    if not os.path.isdir(d):
+    rows = [l.split() for l in read(os.path.join(d, "results.txt")).splitlines() if l.strip()]
+    if not rows:
         print("not run")
         return
-    base_sha = "0d0197fb36d95695dccef03436bb0649f985b32d"
-    commits = [base_sha] + read(os.path.join(d, "commits.txt")).split()
-    ref = tb_scalars(os.path.join(d, "dump_" + base_sha, "tb_baseline"))
-    first_diff = None
-    for sha in commits:
-        code = read(os.path.join(d, sha + ".exit"), "?").strip()
+    ref = tb_scalars(os.path.join(d, "dump_base", "tb_baseline"))
+    for row in rows:
+        if row[0] == "first_diff":
+            continue
+        name, sha, status = row
         subj = subprocess.run(
             ["git", "-C", AG_SRC, "log", "-1", "--format=%s", sha],
             capture_output=True, text=True,
         ).stdout.strip()[:60]
-        a = tb_scalars(os.path.join(d, "dump_" + sha, "tb_baseline"))
-        b = tb_scalars(os.path.join(d, "dump_" + sha, "tb_test"))
-        if a is None or b is None or ref is None:
-            status = f"CRASH exit={code} {last_error(os.path.join(d, sha + '.log'))[:80]}"
-        else:
-            repeat = a == b
-            same = a == ref
-            if not same and first_diff is None:
-                first_diff = sha
-            dl = max(abs(a["loss"][s] - ref["loss"][s]) for s in ref["loss"] if s in a["loss"])
-            status = f"{'SAME' if same else 'DIFF'} repeat={'yes' if repeat else 'NO'} max|dloss|={dl:.1e}"
-        print(f"{sha[:9]} {status} | {subj}")
-    print(f"first commit that differs from v0.0.19: {first_diff[:9] if first_diff else 'none'}")
+        extra = ""
+        m = tb_scalars(os.path.join(d, "dump_" + name, "tb_baseline"))
+        if status == "CRASH":
+            extra = " " + last_error(os.path.join(d, name + ".log"))[:90]
+        elif m and ref:
+            dl = max(abs(m["loss"][s] - ref["loss"][s]) for s in ref["loss"] if s in m["loss"])
+            extra = f" max|dloss|={dl:.1e}"
+        print(f"{name:11s} {sha[:9]} {status}{extra} | {subj}")
+    first = [r[1] for r in rows if r[0] == "first_diff"]
+    print(f"first commit that changes K3: {first[0][:9] if first else 'not found'}")
 
 
 def diag_section():
