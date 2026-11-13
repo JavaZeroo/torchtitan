@@ -185,7 +185,7 @@ def _small_kimi_k3_config(*, has_vision_encoder: bool = True) -> KimiK3Model.Con
         top_k=1,
         num_shared_experts=1,
         vision_encoder=(
-            _vision_encoder_config(
+            vision_encoder_config(
                 text_dim=dim,
                 dim=48,
                 qkv_dim=48,
