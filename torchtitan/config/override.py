@@ -31,6 +31,8 @@ See ``torchtitan/config/OVERRIDE.md`` for the full design document.
 
 from __future__ import annotations
 
+import copy
+
 import importlib
 import json
 
@@ -328,7 +330,7 @@ def _resolve_target(target: str) -> tuple[str, str]:
 
 
 def _resolve_active(
-    targets: list[tuple[str, str, dict[str, Any]]]
+    override_config: OverrideConfig,
 ) -> list[tuple[Override, dict[str, Any]]]:
     """Pair each activated override with the kwargs of the target that named it.
 
@@ -340,6 +342,12 @@ def _resolve_active(
     A target naming no registered override, or two targets naming the same one,
     is a mistake and raises rather than resolving silently.
     """
+    targets = [
+        (*_resolve_target(entry), {})
+        if isinstance(entry, str)
+        else (*_resolve_target(entry[0]), entry[1])
+        for entry in override_config.imports
+    ]
     resolved: list[tuple[Override, dict[str, Any]]] = []
     claimed: set[str] = set()
     for module, func, kwargs in targets:
@@ -356,6 +364,55 @@ def _resolve_active(
         claimed.add(target)
         resolved.append((ov, kwargs))
     return resolved
+
+
+def resolve_root_override(config: Configurable.Config) -> Configurable.Config:
+    """Select the root implementation before build; leave component overrides pending.
+
+    ConfigLoader calls this after launch options. Python callers can use
+    ``resolve_root_override(config).build()``. At most one factory can claim
+    the root. It receives an independent config with its own entry consumed,
+    and may return a derived config carrying the remaining component overrides.
+    """
+    from torchtitan.config.configurable import Configurable
+
+    overrides = getattr(config, "override", None)
+    if not isinstance(overrides, OverrideConfig) or not overrides.imports:
+        return config
+    resolved = _resolve_active(overrides)
+    roots = [
+        (ov, kwargs)
+        for ov, kwargs in resolved
+        if isinstance(config, ov.target_cls)
+        and (not ov.exact or type(config) is ov.target_cls)
+        and ov.matches("")
+    ]
+    if not roots:
+        return config
+    if len(roots) > 1:
+        raise ValueError(
+            "Multiple overrides claim the root config: "
+            + ", ".join(ov.name for ov, _ in roots)
+        )
+    ov, kwargs = roots[0]
+    prepared = copy.deepcopy(config)
+    pending: OverrideConfig = cast(Any, prepared).override
+    pending.imports = [
+        entry
+        for entry in pending.imports
+        if (entry if isinstance(entry, str) else entry[0]) != ov.name
+    ]
+    replacement = ov.factory(prepared, **kwargs)
+    if not isinstance(replacement, Configurable.Config):
+        raise ValueError(f"Root override '{ov.name}' must return a Configurable.Config")
+    replacement.__post_init__()
+    logger.info(
+        "[Override] %s: <root> %s -> %s",
+        ov.name,
+        type(config).__qualname__,
+        type(replacement).__qualname__,
+    )
+    return replacement
 
 
 @dataclass
@@ -449,18 +506,7 @@ def apply_overrides(
 
     Returns a list of human-readable log lines describing each replacement.
     """
-    # Each entry is a bare target string or a (target, kwargs) tuple; a target is
-    # a module.function path (see OverrideConfig.imports). Resolve each to
-    # (module, function) -- importing its module, which triggers that module's
-    # @override decorators -- and forward the kwargs to the override it names.
-    entries: list[tuple[str, dict[str, Any]]] = [
-        (e, {}) if isinstance(e, str) else (e[0], e[1]) for e in override_config.imports
-    ]
-    targets: list[tuple[str, str, dict[str, Any]]] = [
-        (*_resolve_target(target), kwargs) for target, kwargs in entries
-    ]
-
-    resolved = _resolve_active(targets)
+    resolved = _resolve_active(override_config)
     claims = _collect_claims(resolved, config_root)
     _check_node_conflicts(claims)
 

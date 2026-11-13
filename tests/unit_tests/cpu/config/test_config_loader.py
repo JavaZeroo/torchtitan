@@ -5,13 +5,22 @@
 # LICENSE file in the root directory of this source tree.
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from types import SimpleNamespace
 from unittest import mock
 
 import pytest
 
-from torchtitan.config import ConfigLoader, Configurable, OverrideConfig
+from torchtitan.config import (
+    apply_overrides,
+    ConfigLoader,
+    Configurable,
+    derive,
+    override,
+    OverrideConfig,
+    resolve_root_override,
+)
+from torchtitan.config.override import _REGISTRY
 from torchtitan.config.parallelism import ParallelismConfig
 
 
@@ -23,6 +32,7 @@ class _Checked(Configurable):
     @dataclass(kw_only=True, slots=True)
     class Config(Configurable.Config):
         bad: bool = False
+        value: int = 1
 
         def __post_init__(self) -> None:
             if self.bad:
@@ -192,7 +202,11 @@ def test_override_tokens_are_forwarded() -> None:
     )
     with mock.patch.object(
         ConfigLoader, "_load_config", return_value=config
-    ), mock.patch.object(ConfigLoader, "_trainer_config", return_value=config):
+    ), mock.patch.object(
+        ConfigLoader, "_trainer_config", return_value=config
+    ), mock.patch(
+        "torchtitan.config.loader.resolve_root_override", side_effect=lambda cfg: cfg
+    ):
         loaded = ConfigLoader().load(
             [
                 "--module",
@@ -224,7 +238,11 @@ def test_recipe_and_cli_overrides_are_applied_together() -> None:
     )
     with mock.patch.object(
         ConfigLoader, "_load_config", return_value=config
-    ), mock.patch.object(ConfigLoader, "_trainer_config", return_value=config):
+    ), mock.patch.object(
+        ConfigLoader, "_trainer_config", return_value=config
+    ), mock.patch(
+        "torchtitan.config.loader.resolve_root_override", side_effect=lambda cfg: cfg
+    ):
         loaded = ConfigLoader().load(
             [
                 "--module",
@@ -251,7 +269,11 @@ def test_cli_overrides_extend_the_top_level_rl_config() -> None:
     )
     with mock.patch.object(
         ConfigLoader, "_load_config", return_value=config
-    ), mock.patch.object(ConfigLoader, "_trainer_config", return_value=trainer):
+    ), mock.patch.object(
+        ConfigLoader, "_trainer_config", return_value=trainer
+    ), mock.patch(
+        "torchtitan.config.loader.resolve_root_override", side_effect=lambda cfg: cfg
+    ):
         ConfigLoader().load(
             [
                 "--module",
@@ -264,3 +286,122 @@ def test_cli_overrides_extend_the_top_level_rl_config() -> None:
         )
 
     assert config.override.imports == ["pkg.recipe", "pkg.cli"]
+
+
+class _Launch(Configurable):
+    @dataclass(kw_only=True, slots=True)
+    class Config(Configurable.Config):
+        child: _Checked.Config = field(default_factory=_Checked.Config)
+        override: OverrideConfig = field(default_factory=OverrideConfig)
+        dump_folder: str = "outputs"
+
+    def __init__(self, config):
+        apply_overrides(config.override, config)
+        self.config = config
+
+
+class _AlternateLaunch(_Launch):
+    @dataclass(kw_only=True, slots=True)
+    class Config(_Launch.Config):
+        multiplier: int = 2
+
+
+@pytest.fixture
+def root_overrides():
+    saved = dict(_REGISTRY)
+    calls = []
+
+    @override(target=_Launch.Config, fqns=[""])
+    def select_launch(config, *, multiplier=2):
+        calls.append(config.dump_folder)
+        config.child.value += 1
+        return derive(config, _AlternateLaunch.Config, multiplier=multiplier)
+
+    @override(target=_Checked.Config)
+    def increment_child(config):
+        return derive(config, _Checked.Config, value=config.value + 10)
+
+    try:
+        yield f"{__name__}.select_launch", f"{__name__}.increment_child", calls
+    finally:
+        _REGISTRY.clear()
+        _REGISTRY.update(saved)
+
+
+@pytest.mark.parametrize("root_first", [True, False])
+def test_root_override_selects_owner_before_build(root_overrides, root_first):
+    root, child, calls = root_overrides
+    source = _Launch.Config()
+    entries = [f'{root}={{"multiplier": 3}}', child]
+    if not root_first:
+        entries.reverse()
+    args = ["--module", "unused", "--config", "unused", "--output-dir", "selected"]
+    for entry in entries:
+        args.extend(["--override", entry])
+    with mock.patch.object(ConfigLoader, "_load_config", return_value=source):
+        config = ConfigLoader().load(args)
+    assert calls == ["selected"]
+    assert config.child.value == 2  # Component replacement still waits for the owner.
+    assert config.override.imports == [child]
+    assert source.child.value == 1  # A root factory cannot mutate the recipe's tree.
+    assert len(source.override.imports) == 2
+    assert resolve_root_override(config) is config
+    instance = config.build()
+    assert isinstance(instance, _AlternateLaunch)
+    assert instance.config.multiplier == 3
+    assert instance.config.child.value == 12  # Applied exactly once, at construction.
+    assert calls == ["selected"]
+
+
+def test_component_only_loading_preserves_owner_and_timing(root_overrides):
+    _, child, calls = root_overrides
+    source = _Launch.Config(override=OverrideConfig(imports=[child]))
+    with mock.patch.object(ConfigLoader, "_load_config", return_value=source):
+        config = ConfigLoader().load(["--module", "unused", "--config", "unused"])
+    assert config is source
+    assert config.child.value == 1
+    assert calls == []
+    instance = config.build()
+    assert type(instance) is _Launch
+    assert instance.config.child.value == 11
+
+
+def test_root_conflicts_fail_before_either_factory_runs(root_overrides):
+    root, _, calls = root_overrides
+
+    @override(target=_Launch.Config, fqns=[""])
+    def another_launch(config):
+        raise AssertionError("Conflicting factories must not run")
+
+    config = _Launch.Config(
+        override=OverrideConfig(imports=[root, f"{__name__}.another_launch"])
+    )
+    with pytest.raises(ValueError, match="Multiple overrides claim the root"):
+        resolve_root_override(config)
+    assert calls == []
+
+
+@pytest.mark.parametrize("exact,fqns", [(True, [""]), (False, ["child"])])
+def test_root_selection_respects_exact_type_and_fqns(root_overrides, exact, fqns):
+    @override(target=_Launch.Config, exact=exact, fqns=fqns)
+    def unselected(config):
+        raise AssertionError("This override must not match the root")
+
+    config = _AlternateLaunch.Config(
+        override=OverrideConfig(imports=[f"{__name__}.unselected"])
+    )
+    assert resolve_root_override(config) is config
+
+
+def test_python_root_selection_revalidates_replacement(root_overrides):
+    @override(target=_Launch.Config, fqns=[""])
+    def invalid_root(config):
+        replacement = _Checked.Config()
+        replacement.bad = True
+        return replacement
+
+    config = _Launch.Config(
+        override=OverrideConfig(imports=[f"{__name__}.invalid_root"])
+    )
+    with pytest.raises(ValueError, match="bad flag"):
+        resolve_root_override(config)

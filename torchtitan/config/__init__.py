@@ -23,6 +23,7 @@ from .override import (
     Override,
     override,
     OverrideConfig,
+    resolve_root_override,
 )
 
 __all__ = [
@@ -42,5 +43,6 @@ __all__ = [
     "override",
     "derive",
     "apply_overrides",
+    "resolve_root_override",
     "clear_overrides",
 ]

@@ -17,7 +17,11 @@ from typing import Any, get_args
 
 from torchtitan.config.configs import CommBackend
 from torchtitan.config.configurable import Configurable
-from torchtitan.config.override import OverrideConfig, parse_cli_imports
+from torchtitan.config.override import (
+    OverrideConfig,
+    parse_cli_imports,
+    resolve_root_override,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -50,9 +54,10 @@ class ConfigLoader:
             override_config.imports.extend(parse_cli_imports(namespace.override))
 
         self._apply_launch_options(config, namespace)
+        config = resolve_root_override(config)
         self._validate_assets_path(config)
         # Recipes assign fields after the constructing __post_init__, and the
-        # launch options assign more. Overrides run later, in apply_overrides.
+        # launch options assign more. Component overrides run later.
         config.__post_init__()
 
         if namespace.print_config:

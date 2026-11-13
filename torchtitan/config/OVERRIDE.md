@@ -208,6 +208,42 @@ python -m torchtitan.train --module torchtitan_recipes.models.llama3 --config ll
 
 ### Application
 
+`ConfigLoader` first calls `resolve_root_override` after applying launch options.
+This stage selects the top-level implementation before `config.build()` chooses
+its owner. Ordinary component replacements still run in the consumer as below.
+Root factories use the same `@override` decorator and CLI syntax:
+
+```python
+# my_pkg/training.py
+from torchtitan.config import derive, override
+from torchtitan.trainer import Trainer
+from my_pkg.trainer import CustomTrainer
+
+@override(target=Trainer.Config, fqns=[""])
+def custom_training(config, *, buffer_size: int):
+    return derive(config, CustomTrainer.Config, buffer_size=buffer_size)
+```
+
+```bash
+python -m torchtitan.train --module torchtitan_recipes.models.llama3 --config llama3_8b \
+    --override 'my_pkg.training.custom_training={"buffer_size": 4096}'
+```
+
+The empty FQN names the root. At most one active factory may claim it; multiple
+claims fail before any factory runs. The root factory receives a deep copy of
+the config with its own activation entry removed. Preserve the remaining
+`override.imports` (as `derive` does); these are component choices applied to
+the returned tree. A root factory may add component entries needed by its
+implementation. Root selection is a separate stage, not an exception to the
+component parent/child conflict rules. It does not repeatedly apply root
+factories to their replacements.
+
+For Python callers, use `resolve_root_override(config).build()`. Calling
+`config.build()` directly retains the existing consumer behavior and does not
+select a different root owner. `--print-config` shows the selected root and its
+pending component overrides. Selected override modules are imported during
+loading, including for `--print-config`; imports must not initialize devices.
+
 In `Trainer.__init__`, before any component is built:
 
 1. Copy the structural model config and set its sharding from the consumer's
@@ -374,7 +410,7 @@ because it is a `Configurable.Config` subclass.
 
 In-repo quantization converters run first inside `build_model_config()` during
 config construction. Model config transforms such as LoRA run afterward when
-the recipe calls `apply_transforms`. Overrides run later in `Trainer.__init__`
+the recipe calls `apply_transforms`. Component overrides run later in `Trainer.__init__`
 and see the post-converter, post-transform tree. The order is deliberate:
 in-repo conversions run against known core configs, and overrides layer on top.
 
