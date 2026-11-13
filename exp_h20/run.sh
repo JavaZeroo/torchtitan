@@ -145,7 +145,7 @@ stage_k3bisect() {
       --baseline-module=torchtitan_recipes.tests.models.kimi_k3 \
       --baseline-config=kimi_k3_debugmodel --steps=10 --no-seed-checkpoint \
       --metrics=loss,grad_norm --baseline-ngpus=1 --test-ngpus=1 \
-      --job-dump-folder="$d/dump_$name" --assert-equal $extra \
+      --job-dump-folder="$d/dump_$name" $extra \
       > "$d/$name.log" 2>&1
     local code=$? status
     if [ $code -eq 0 ]; then status=SAME
@@ -158,13 +158,13 @@ stage_k3bisect() {
   local r
   r=$(_k3run "$base" base "--export-result=$d/base_v0.0.19.txt")
   [ "$r" = SAME ] || return 0
-  _k3run "$base" base_repeat "--import-result=$d/base_v0.0.19.txt" > /dev/null
+  _k3run "$base" base_repeat "--assert-equal --import-result=$d/base_v0.0.19.txt" > /dev/null
   local n=${#C[@]} lo=-1 hi=$(( ${#C[@]} - 1 ))
-  r=$(_k3run "${C[$hi]}" "c$hi" "--import-result=$d/base_v0.0.19.txt")
+  r=$(_k3run "${C[$hi]}" "c$hi" "--assert-equal --import-result=$d/base_v0.0.19.txt")
   [ "$r" = DIFF ] || return 0
   while [ $((hi - lo)) -gt 1 ]; do
     local mid=$(( (lo + hi) / 2 ))
-    r=$(_k3run "${C[$mid]}" "c$mid" "--import-result=$d/base_v0.0.19.txt")
+    r=$(_k3run "${C[$mid]}" "c$mid" "--assert-equal --import-result=$d/base_v0.0.19.txt")
     case $r in SAME) lo=$mid ;; DIFF) hi=$mid ;; *) return 0 ;; esac
   done
   echo "first_diff ${C[$hi]}" >> "$d/results.txt"
