@@ -21,14 +21,40 @@ def read(path, default=""):
         return default
 
 
+# Wrapper errors that only say "a child failed"; the root cause is elsewhere.
+_WRAPPERS = ("ChildFailedError", "CalledProcessError", "numa_node", "socketProgress")
+_FAILED_LOGS = []
+
+
+def _clean(text):
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    return re.sub(r"^(\[rank\d+\]:)+\s?", "", text, flags=re.M)
+
+
+def root_error(log_path):
+    """Returns (error line, last few traceback frames) of the first rank's root error."""
+    lines = _clean(read(log_path)).splitlines()
+    pat = re.compile(
+        r"^\s*([A-Za-z_][\w.]*(Error|Exception|Exit)|torch\.\w+[\w.]*Error)(: .*)?$"
+    )
+    for i, line in enumerate(lines):
+        if pat.match(line) and not any(w in line for w in _WRAPPERS):
+            frames = [
+                l.strip()
+                for l in lines[max(0, i - 40) : i]
+                if l.strip().startswith("File ")
+            ]
+            return line.strip()[:200], frames[-4:]
+    for line in lines:
+        if re.search(r"NCCL (WARN|ERROR)|CUDA error|out of memory|Segmentation fault|Killed|: error: ", line):
+            return line.strip()[:200], []
+    return "-", []
+
+
 def last_error(log_path):
-    text = re.sub(r"\x1b\[[0-9;]*m", "", read(log_path))
-    hits = [
-        m.group(0)
-        for m in re.finditer(r"\b[A-Za-z]*(Error|Exception): [^\n]*", text)
-        if "numa_node" not in m.group(0)
-    ]
-    return hits[-1][:160] if hits else "-"
+    msg, _ = root_error(log_path)
+    _FAILED_LOGS.append(log_path)
+    return msg[:160]
 
 
 def tb_scalars(tb_dir):
@@ -69,7 +95,14 @@ def unit_section():
     print("## unit")
     xml = os.path.join(OUT, "unit", "unit.xml")
     if not os.path.exists(xml):
-        print("not run")
+        code = read(os.path.join(OUT, "unit", "exit"), "").strip()
+        if not code:
+            print("not run")
+            return
+        tail = _clean(read(os.path.join(OUT, "unit", "unit.log"))).strip().splitlines()[-3:]
+        print(f"no junit xml, exit={code}; log tail:")
+        for l in tail:
+            print("  " + l[:160])
         return
     root = ET.parse(xml).getroot()
     suite = root if root.tag == "testsuite" else root.find("testsuite")
@@ -94,7 +127,16 @@ def ci_section():
         if f.endswith(".exit"):
             t = f[: -len(".exit")]
             code = read(os.path.join(d, f)).strip()
-            err = "" if code == "0" else "  " + last_error(os.path.join(d, t + ".log"))
+            err = ""
+            if code != "0":
+                logs = [os.path.join(d, t + ".log")] + sorted(
+                    os.path.join(r, n)
+                    for r, _, ns in os.walk(os.path.join(d, "out_" + t))
+                    for n in ns
+                    if n.endswith((".log", ".txt"))
+                )
+                hit = next((l for l in logs if root_error(l)[0] != "-"), logs[0])
+                err = "  " + last_error(hit)
             print(f"{t}: {'PASS' if code == '0' else 'FAIL exit=' + code}{err}")
 
 
@@ -183,9 +225,38 @@ def k3bisect_section():
     print(f"first commit that differs from v0.0.19: {first_diff[:9] if first_diff else 'none'}")
 
 
+def diag_section():
+    # One block per distinct root error, with the runs that hit it.
+    groups = {}
+    for log in _FAILED_LOGS:
+        msg, frames = root_error(log)
+        if "Import file does not exist" in msg:
+            continue
+        key = msg[:120]
+        groups.setdefault(key, (msg, frames, []))[2].append(
+            os.path.relpath(log, OUT)
+        )
+    if not groups:
+        return
+    print("## root errors (one block per distinct error)")
+    for msg, frames, logs in groups.values():
+        print(f"- {msg}")
+        print(f"  runs: {', '.join(sorted(logs))[:300]}")
+        for f in frames:
+            print("    " + re.sub(r'"/[^"]*/(torchtitan|torch|attn_gym|tests|scripts)/', r'"\1/', f)[:150])
+
+
 if __name__ == "__main__":
     print(f"# k31 h20 summary  ({OUT})")
-    for section in (env_section, unit_section, ci_section, par_section, neg_section, k3bisect_section):
+    for section in (
+        env_section,
+        unit_section,
+        ci_section,
+        par_section,
+        neg_section,
+        k3bisect_section,
+        diag_section,
+    ):
         try:
             section()
         except Exception as e:
