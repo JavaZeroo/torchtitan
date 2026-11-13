@@ -233,3 +233,27 @@ def n_tp2_16_heads() -> Trainer.Config:
     _adamw(config)
     _set_spmd_typechecking(config, typechecking=True)
     return _finish(config)
+
+
+# --- 2-GPU matrix: PP and TP compared against dp_shard=1 baselines ---
+def p_dp1() -> Trainer.Config:
+    return _finish(_p(data_parallel_shard_degree=1))
+
+
+def p_pp2() -> Trainer.Config:
+    return _finish(_p(data_parallel_shard_degree=1, pipeline_parallel_degree=2))
+
+
+def t_dp1() -> Trainer.Config:
+    return _finish(_t(data_parallel_shard_degree=1))
+
+
+def t_tp2_ep2() -> Trainer.Config:
+    return _finish(
+        _t(
+            data_parallel_shard_degree=1,
+            tensor_parallel_degree=2,
+            enable_sequence_parallel=True,
+            expert_parallel_degree=2,
+        )
+    )
