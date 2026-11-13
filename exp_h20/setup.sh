@@ -22,10 +22,12 @@ source "$VENV/bin/activate"
 python -m pip install -U pip
 
 INDEX=https://download.pytorch.org/whl/nightly/$CU
-python -m pip install --pre torch --index-url "$INDEX"
+# torchvision decodes the images of the multimodal debug datasets, so it must
+# come from the same nightly as torch.
+python -m pip install --pre torch torchvision --index-url "$INDEX"
 python -m pip install --pre -r .github/requirements-torchao.txt --index-url "$INDEX"
 # requirements.txt pins attn-gym and torch_remat from GitHub.
-python -m pip install -r requirements.txt -r .ci/docker/requirements-dev.txt
+python -m pip install -r requirements.txt -r .ci/docker/requirements-dev.txt -r .ci/docker/requirements-vlm.txt
 # FA3, as the H100 CI job installs it; only some Kimi K3 paths use it.
 python -m pip install flash-attn-3 --extra-index-url https://download.pytorch.org/whl/test/cu130 \
   || echo "flash-attn-3 install failed; continuing"
