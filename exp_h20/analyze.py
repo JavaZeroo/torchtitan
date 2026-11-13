@@ -141,6 +141,16 @@ def ci_section():
 
 
 def compare(base, other):
+    if all(v == -1 for v in other["loss"].values()) or all(v == -1 for v in base["loss"].values()):
+        # PP logs the loss only on its last stage; grad_norm is global.
+        steps = sorted(set(base["grad_norm"]) & set(other["grad_norm"]))
+        dg = max(abs(base["grad_norm"][s] - other["grad_norm"][s]) for s in steps)
+        s1 = steps[0]
+        return (
+            f"(loss not on this rank; grad_norm only) steps={len(steps)} "
+            f"gn1_equal={base['grad_norm'][s1] == other['grad_norm'][s1]} "
+            f"gn1={other['grad_norm'][s1]:.4f} vs {base['grad_norm'][s1]:.4f} max|dgn|={dg:.2e}"
+        )
     steps = sorted(set(base["loss"]) & set(other["loss"]))
     if not steps:
         return "no common steps"
@@ -158,6 +168,8 @@ def compare(base, other):
 
 
 def _par_base(group, run):
+    if group == "par_pp":
+        return "p_ga4_run1"
     prefix = group[-1]
     p = run.split("_")[1] if "_" in run else ""
     dp1 = p in ("dp1", "pp2", "tp2")
@@ -165,7 +177,7 @@ def _par_base(group, run):
 
 
 def par_section():
-    for group in ("par_p", "par_t"):
+    for group in ("par_p", "par_t", "par_pp"):
         print(f"## {group} (each run vs its baseline's first run, nondeterministic)")
         g = os.path.join(OUT, group)
         if not os.path.isdir(g):

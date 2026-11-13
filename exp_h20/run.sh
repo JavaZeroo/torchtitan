@@ -4,7 +4,7 @@
 # Usage (from the repo root, inside the container prepared by setup.sh):
 #   bash exp_h20/run.sh all                 # every stage, in order
 #   bash exp_h20/run.sh par k3bisect        # only the named stages
-# Stages: env unit ci par neg k3bisect
+# Stages: env unit ci par pp neg k3bisect
 # Each stage deletes its own output folder first and reruns from scratch.
 # Then: python exp_h20/analyze.py   -> prints the short summary to send back.
 
@@ -110,6 +110,15 @@ stage_par() {
   return 0
 }
 
+stage_pp() {
+  # PP2 runs 4 microbatches per step, so its baseline is dp_shard=1 with 4-step
+  # gradient accumulation. PP logs the loss on its last stage (LOG_RANK=1).
+  local g=$OUT/par_pp; rm -rf "$g"; mkdir -p "$g"
+  _train "$g" p_seed 1 seed
+  _twice "$g" p_ga4 1
+  LOG_RANK=1 _train "$g" p_pp2 2 load
+}
+
 stage_neg() {
   local g=$OUT/neg; rm -rf "$g"; mkdir -p "$g"
   STEPS=2 _train "$g" n_tp2_16_heads 2 ""
@@ -163,8 +172,8 @@ stage_k3bisect() {
 }
 
 stages=("$@")
-[ ${#stages[@]} -eq 0 ] && { echo "usage: $0 all | env unit ci par neg k3bisect"; exit 1; }
-[ "${stages[0]}" = all ] && stages=(env unit ci par neg k3bisect)
+[ ${#stages[@]} -eq 0 ] && { echo "usage: $0 all | env unit ci par pp neg k3bisect"; exit 1; }
+[ "${stages[0]}" = all ] && stages=(env unit ci par pp neg k3bisect)
 for s in "${stages[@]}"; do
   log "=== $s ==="
   "stage_$s"

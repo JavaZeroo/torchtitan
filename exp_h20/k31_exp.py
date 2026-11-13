@@ -257,3 +257,10 @@ def t_tp2_ep2() -> Trainer.Config:
             expert_parallel_degree=2,
         )
     )
+
+
+def p_ga4() -> Trainer.Config:
+    # Same tokens per step as p_pp2 (4 microbatches of 256), without PP.
+    config = _p(data_parallel_shard_degree=1)
+    config.training.num_tokens_per_train_step = 4 * config.training.num_tokens_per_microbatch_per_dp_rank
+    return _finish(config)
