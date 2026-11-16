@@ -65,7 +65,7 @@ from torchtitan.models.common.moe.sharding import (
 from torchtitan.models.common.moe.token_dispatcher import AllToAllTokenDispatcher
 from torchtitan.models.common.nn_modules import Conv1d, GELU, LayerNorm, RMSNorm
 from torchtitan.models.common.param_init import depth_scaled_std
-from torchtitan.models.common.rope import ComplexRoPE
+from torchtitan.models.common.rope import ComplexRoPE, ComplexVisionRoPE, RoPE
 from torchtitan.models.common.vision_encoder import (
     VisionAttention,
     VisionMLP,
@@ -77,6 +77,7 @@ from torchtitan.models.common.vision_encoder_sharding import (
     vision_colwise_sharding_config,
     vision_inner_attention_sharding_config,
     vision_invariant_linear_sharding_config,
+    vision_rope_sharding_config,
     vision_rowwise_sharding_config,
 )
 
@@ -111,11 +112,10 @@ from .sharding import (
     residual_gate_sharding_config,
     transformer_block_sharding_config,
 )
-from .vision_encoder import MuseSparkNaViTAdapter, NaViTEncoder, VisionRopeFreq
+from .vision_encoder import MuseSparkNaViTAdapter, NaViTEncoder
 from .vision_encoder_sharding import (
     cp_replicated_vision_sharding_config,
     navit_encoder_sharding_config,
-    vision_rope_freq_sharding_config,
 )
 
 
@@ -601,10 +601,12 @@ def _muse_spark_navit_attention_config(
     *,
     latent_dim: int,
     num_heads: int,
+    rope: RoPE.Config | None,
 ) -> VisionAttention.Config:
     return VisionAttention.Config(
         dim=latent_dim,
         num_heads=num_heads,
+        rope=rope,
         inner_attention=DeterministicVarlenInnerAttention.Config(
             sharding_config=vision_inner_attention_sharding_config(),
         ),
@@ -632,7 +634,7 @@ def _muse_spark_navit_attention_config(
             bias=True,
             sharding_config=vision_rowwise_sharding_config(),
         ),
-        sharding_config=vision_attention_sharding_config(rope_cache_dp=spmd.V),
+        sharding_config=vision_attention_sharding_config(positions_dp=spmd.V),
     )
 
 
@@ -673,6 +675,7 @@ def muse_spark_navit_encoder_config(
     pos_emb_grid_w: int = 32,
     use_rope: bool = True,
     rope_theta: float = 10000.0,
+    max_rope_positions: int = 8193,
 ) -> NaViTEncoder.Config:
     head_dim = latent_dim // num_heads
     output_dim = latent_dim * downsample_factor**2
@@ -689,11 +692,6 @@ def muse_spark_navit_encoder_config(
         sparse_attention_factor=sparse_attention_factor,
         pos_emb_grid_h=pos_emb_grid_h,
         pos_emb_grid_w=pos_emb_grid_w,
-        rope_freq=VisionRopeFreq.Config(
-            head_dim=head_dim,
-            rope_theta=rope_theta,
-            sharding_config=vision_rope_freq_sharding_config(),
-        ),
         conv1_linear=Linear.Config(
             in_features=patch_input_dim,
             out_features=latent_dim,
@@ -716,6 +714,17 @@ def muse_spark_navit_encoder_config(
             attn=_muse_spark_navit_attention_config(
                 latent_dim=latent_dim,
                 num_heads=num_heads,
+                rope=(
+                    ComplexVisionRoPE.Config(
+                        dim=head_dim,
+                        max_context_length=max_rope_positions,
+                        theta=rope_theta,
+                        pair_layout="concatenated",
+                        sharding_config=vision_rope_sharding_config(),
+                    )
+                    if use_rope
+                    else None
+                ),
             ),
             mlp=_muse_spark_navit_mlp_config(
                 latent_dim=latent_dim,
@@ -726,7 +735,6 @@ def muse_spark_navit_encoder_config(
             normalized_shape=latent_dim,
             sharding_config=invariant_norm_sharding_config(),
         ),
-        use_rope=use_rope,
         pos_emb_grid_order="legacy_spark",
         param_init=_VISION_POSITION_INIT,
         sharding_config=navit_encoder_sharding_config(),
