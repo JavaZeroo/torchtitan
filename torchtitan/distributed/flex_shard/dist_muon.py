@@ -225,6 +225,7 @@ class DistMuon(Optimizer):
             compute=self._compute_update,
             finalize=self._apply_update,
         )
+        self._redistribution_runtime.release_buffers()
         return loss
 
     def add_param_group(self, param_group: dict[str, Any]) -> None:
